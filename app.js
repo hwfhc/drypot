@@ -1,4 +1,4 @@
-const directory = '/usr/local/Framework';
+const directory = '/usr/local/core';
 const app = require('express')();
 
 initRoutes(app,directory);

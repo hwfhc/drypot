@@ -24,4 +24,10 @@ function initRoutes(app,directory){
     app.get('/components/:file/index.css',function(req,res){
         res.sendFile(`${directory}/components/${req.params['file']}/index.css`);
     });
+
+
+    app.get('/user/0/username',function(req,res){
+        res.send('asdf');
+    });
+
 }
