@@ -105,6 +105,6 @@
 
         var split = window.location.pathname.split('/');
 
-        return front + split[2] + back;
+        return front + split[variant] + back;
     }
 })();
