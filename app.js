@@ -1,4 +1,4 @@
-const directory = '/usr/local/core';
+const directory = '/usr/local/drypot';
 const app = require('express')();
 
 initRoutes(app,directory);
