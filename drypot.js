@@ -66,45 +66,34 @@
         xhttp.send();
     }
 
-    /*
-     *just insert data into url now
-     *
-     * @param {String} url
-     * @return {String}
-     *
-     */
+    function InputStream(input) {
+        var pos = 0, line = 1, col = 0;
 
-    function parse(url){
-        let front = '';
-        let back = '';
-        let variant = '';
+        return {
+            next  : next,
+            peek  : peek,
+            eof   : eof,
+            croak : croak,
+        };
 
-        let innerHTML = url;
-        let isReadVar = 0;
-        let hadReadVar = false;
-
-        for(var j=0;j<innerHTML.length;j++){
-            var char = innerHTML[j];
-            if(char === '('){
-                isReadVar++;
-                continue;
-            }
-            if(char === ')'){
-                isReadVar--;
-                hadReadVar = true;
-                continue;
-            }
-
-            if(isReadVar === 0 && hadReadVar === false) front += char;
-            if(isReadVar === 0 && hadReadVar === true) back += char;
-
-            if(isReadVar == 1 && char != '(' && char != ')'){
-                variant += char;
-            }
+        function next() {
+            var ch = input.charAt(pos);pos++;
+            if (ch == "\n") line++, col = 0; else col++;
+            return ch;
         }
 
-        var split = window.location.pathname.split('/');
+        function peek() {
+            return input.charAt(pos);
+        }
 
-        return front + split[variant] + back;
+        function eof() {
+            return peek() == "";
+        }
+
+        function croak(msg) {
+            throw new Error(msg + " (" + line + ":" + col + ")");
+        }
+
     }
+
 })();
