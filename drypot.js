@@ -66,24 +66,35 @@
         xhttp.send();
     }
 
+    //var code = "asd  af{{ajax (`/homePgae/${getPathname(13 + 126,12, a  = 5,`asf449`)}/test`)}}sadfsf";
+    var code = "asd  af   {{ajax (`/homePgae/${getPathname(3)}/test`)}}  sadfsf";
+    console.log(code);
+    console.log(interpret_toplevel(parse(TokenStream(InputStream(code)))));
+
     function InputStream(input) {
         var pos = 0, line = 1, col = 0;
 
         return {
-            next  : next,
-            peek  : peek,
-            eof   : eof,
-            croak : croak,
+            next,
+            peek,
+            before,
+            eof,
+            croak,
         };
 
         function next() {
-            var ch = input.charAt(pos);pos++;
-            if (ch == "\n") line++, col = 0; else col++;
-            return ch;
+          var ch = input.charAt(pos);pos++;
+          if (ch == "\n") line++, col = 0; else col++;
+          return ch;
+        }
+        //n为几位后，如n=1是为下一位
+        function peek(n = 1) {
+          var offset = n - 1;
+          return input.charAt(pos + offset);
         }
 
-        function peek() {
-            return input.charAt(pos);
+        function before() {
+          return input.charAt(pos - 1);
         }
 
         function eof() {
@@ -96,4 +107,314 @@
 
     }
 
+    function TokenStream(input) {
+        var current = null;
+        //var keywords = " if then else lambda λ true false ";
+        var read_next = read_next_out_code;
+
+        return {
+            next  : next,
+            peek  : peek,
+            eof   : eof,
+            croak : input.croak
+        };
+
+        function read_next_out_code(){
+          if (input.eof()) return null;
+          var ch = input.peek();
+
+          if (is_code_start(ch)){
+            read_next = read_next_in_code;
+            return { type: "code", value: "{{" };
+          }
+          return read_text();
+        }
+        function read_text(){
+          var str = "";
+          while (!input.eof() && input.peek() != '{'){
+            var ch = input.next();
+            str += ch;
+          }
+          return { type: "text", value: str };
+        }
+        function read_next_in_code(){
+          read_while(is_whitespace);
+          if (input.eof()) return null;
+          var ch = input.peek();
+
+          if (is_code_end(ch)){
+            read_next = read_next_out_code;
+            return { type: "code", value: "}}" };
+          }
+          //if (is_op(ch)) return read_op();
+          if (is_str_start(ch)) return read_string();
+          if (is_var_in_str(ch)) return read_var_in_str();
+          if (is_punc(ch)) return {
+              type  : "punc",
+              value : input.next()
+          }
+          if (is_op(ch)) return {
+              type  : "op",
+              value : input.next()
+          }
+          if (is_num(ch)) return read_num();
+          if (is_ident(ch)) return read_ident();
+          input.croak("Can't handle character: " + ch);
+        }
+
+        function read_while(predicate) {
+            var str = "";
+            while (!input.eof() && predicate(input.peek()))
+                str += input.next();
+            return str;
+        }
+        function read_string(){
+          var str = "";
+
+          if(input.peek() === '`') input.next();
+
+          while (!input.eof()){
+            if(is_str_end(input.peek())){
+              input.next();
+              return { type: "str", value: str };
+            }
+            if(is_var_in_str(input.peek())) return { type: "str", value: str };
+            str += input.next();
+          }
+
+          function is_str_end(ch){
+            return "`".indexOf(ch) >= 0;
+          }
+        }
+        function read_var_in_str(){
+          input.next();
+          input.next();
+          return { type: "punc", value: '${' };
+        }
+        function read_num(){
+          var num = parseInt(read_while(is_num));
+          return { type: "num", value: num };
+        }
+        function read_ident() {
+            var ident = read_while(is_ident);
+            return {
+                type  : "var",
+                value : ident
+            };
+        }
+
+        function is_whitespace(ch){
+            return " \t\n".indexOf(ch) >= 0;
+        }
+        function is_code_start(ch){
+          if(ch === '{' && input.peek(2) === '{'){
+            input.next();
+            input.next();
+            return true;
+          }
+          return false;
+        }
+        function is_code_end(ch){
+          if(ch === '}' && input.peek(2) === '}'){
+            input.next();
+            input.next();
+            return true;
+          }
+          return false;
+        }
+        function is_str_start(ch){
+          if( ch === '`' || input.before() === '}') return true;
+        }
+        function is_var_in_str(ch){
+          return ch === '$';
+        }
+        function is_punc(ch){
+          return ",;(){}".indexOf(ch) >= 0;
+        }
+        function is_op(ch){
+          return "+-*/=".indexOf(ch) >= 0;
+        }
+        function is_num(ch){
+          return /[0-9]/i.test(ch);
+        }
+        function is_ident(ch){
+          return /[a-zλ_]/i.test(ch);
+        }
+
+        function peek(){
+            return current || (current = read_next());
+        }
+        function next(){
+            var tok = current;
+            current = null;
+            return tok || read_next();
+        }
+        function eof(){
+            return peek() == null;
+        }
+    }
+
+    function parse(input){
+      return parse_driver();
+
+      function parse_driver(){
+          var html = [];
+          while (!input.eof()){
+              html.push(parse_core());
+          }
+          return { type: "html", html: html };
+      }
+
+      function parse_core(){
+        var tok = input.peek();
+
+        if(is_text(tok)) return parse_text();
+        if(is_code(tok)) return parse_code();
+        return input.next();
+      }
+      function parse_text(){
+        return input.next();
+      }
+
+      function parse_code(){
+        var tok = input.next();
+
+        if(is_call(tok)) return parse_call(tok);
+        if(is_str(tok)) return parse_str(tok);
+        //if(is_bin_exp(tok)) return parse_str();
+        //if(is_end(tok)) return parse_str();
+        if(is_num(tok)) return parse_num(tok);
+      }
+
+      function parse_call(tok){
+        return { type : 'call', func : tok.value, arguments : get_arguments()}
+
+        function get_arguments(){
+          var arg = [], first = true;
+          skip_punc('(');
+          while (!input.eof()) {
+              if (is_punc(')')) break;
+              if (first) {first = false;}else {skip_punc(',');}
+              if (is_punc(')')) break;
+              arg.push(parse_code());
+          }
+          skip_punc(')');
+          return arg;
+        }
+      }
+      function parse_str(tok){
+        var parts = [];
+        parts.push(tok);
+
+        while (!input.eof()){
+          if(is_str(input.peek())){
+            parts.push(input.next());
+            continue;
+          }
+          if(is_var_in_str(input.peek())){
+            input.next();
+            parts.push(parse_code());
+            skip_punc('}');
+            continue;
+          }
+          break;
+        }
+        return { type: "str", parts: parts };
+
+        function is_var_in_str(tok){
+          return tok.value === '${' && tok.type == "punc";
+        }
+      }
+      function parse_num(tok){
+        return tok;
+      }
+
+      function is_text(tok){
+        if(token.type === 'text') return true;
+        return false;
+      }
+      function is_code(tok){
+        if(tok.type === 'code'){
+          input.next();
+          if(tok.value === '{{') return true;
+          return false;
+        }
+        return false;
+      }
+
+      function is_str(tok){
+        if(tok.type === 'str') return true;
+        return false;
+      }
+      function is_call(tok){
+        if(is_punc('(')) return true;
+        return false;
+      }
+      function is_num(tok){
+        if(tok.type === 'num') return true;
+        return false;
+      }
+
+      function is_punc(ch) {
+        var tok = input.peek();
+        return tok && tok.type == "punc" && (!ch || tok.value == ch) && tok;
+      }
+      function skip_punc(ch) {
+          if (is_punc(ch)) input.next();
+          else input.croak("Expecting punctuation: \"" + ch + "\"");
+      }
+    }
+
+    function interpret_toplevel(input){
+      var text = '';
+      var arr = input.html;
+
+      for(var i=0;i<arr.length;i++){
+        text += interpret(arr[i]);
+      }
+      return text;
+
+
+      function interpret(input){
+        if(input.type === 'text') return input.value;
+        if(input.type === 'call') return interpret_call(input);
+        if(input.type === 'str') return interpret_str(input);
+        if(input.type === 'num') return interpret_num(input);
+      }
+      function interpret_call(input){
+        var arg = [];
+
+        for(var i=0;i<input.arguments.length;i++){
+          var item = input.arguments[i];
+          arg.push(interpret(item));
+        }
+
+        if(input.func === 'getPathname') return call_getPathname(arg[0]);
+        if(input.func === 'ajax'){
+          return call_ajax(arg[0]);
+        }
+      }
+      function interpret_str(input){
+        if(!input.parts) return input.value;
+
+        var text = '';
+        var arr = input.parts;
+
+        for(var i=0;i<arr.length;i++){
+          text += interpret(arr[i]);
+        }
+
+        return text;
+      }
+      function interpret_num(input){
+        return input.value;
+      }
+    }
+
+    function call_ajax(url){
+      return url+'hhhh';
+    }
+    function call_getPathname(number){
+      return window.location.pathname.split('/')[number];
+    }
 })();
