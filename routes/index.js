@@ -27,7 +27,7 @@ function initRoutes(app,directory){
 
 
     app.get('/user/:id/username',function(req,res){
-        res.send('asdf' + req.params['id']);
+        res.send('!!!' + req.params['id'] + '???');
     });
 
 }
