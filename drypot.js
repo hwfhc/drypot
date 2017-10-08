@@ -274,7 +274,8 @@
 
         var html = [];
         while (!input.eof()){
-            html.push(parse_html());
+            var result = parse_html();
+            if(result) html.push(result);
         }
         return { type: "html", html: html };
 
@@ -283,6 +284,7 @@
 
             if(is_text(tok)) return parse_text();
             if(is_code(tok)) return parse_code();
+            if(is_code_end(tok)) return null;
             return input.next();
         }
 
@@ -291,10 +293,16 @@
             return false;
         }
         function is_code(tok){
-            if(tok.type === 'code'){
+            if(tok.type === 'code' && tok.value === '{{'){
                 input.next();
-                if(tok.value === '{{') return true;
-                return false;
+                return true;
+            }
+            return false;
+        }
+        function is_code_end(tok){
+            if(tok.type === 'code' && tok.value === '}}'){
+                input.next();
+                return true;
             }
             return false;
         }
