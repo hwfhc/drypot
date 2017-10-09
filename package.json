@@ -6,21 +6,27 @@
   "directories": {
     "example": "examples"
   },
-  "dependencies": {
-    "webpack": "^3.6.0"
-  },
-  "devDependencies": {},
   "scripts": {
+    "build": "node build/build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/hwfhc/drypot.git"
   },
-  "author": "",
+  "keywords": [
+    "drypot"
+  ],
+  "author": "hwfhc",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/hwfhc/drypot/issues"
   },
-  "homepage": "https://github.com/hwfhc/drypot#readme"
+  "homepage": "https://github.com/hwfhc/drypot#readme",
+  "devDependencies": {
+    "webpack": "^3.6.0"
+  },
+  "dependencies": {
+    "express": "^4.16.1"
+  }
 }

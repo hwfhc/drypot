@@ -14,7 +14,7 @@ function initRoutes(app,directory){
     });
 
     app.get('/drypot.min.js',function(req,res){
-        res.sendFile(directory + '/drypot.min.js');
+        res.sendFile(`${directory}/drypot.min.js`);
     });
 
     app.get('/components/:file',function(req,res){

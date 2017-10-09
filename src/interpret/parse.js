@@ -1,6 +1,9 @@
 module.exports = parseDynamicHtml;
 
-function parseDynamicHtml(input){
+const tokenStream = require('./token');
+
+function parseDynamicHtml(code){
+    var input = tokenStream(code);
 
     var html = [];
     while (!input.eof()){
