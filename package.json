@@ -1,22 +1,26 @@
 {
-  "name": "core",
+  "name": "drypot",
   "version": "1.0.0",
-  "description": "a project for fun",
-  "main": "app.js",
+  "description": "隔壁答题系统使用的前端代码复用解决方案",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "dependencies": {
+    "webpack": "^3.6.0"
+  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/hwfhc/core.git"
+    "url": "git+ssh://git@github.com/hwfhc/drypot.git"
   },
-  "author": "hwfhc",
+  "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hwfhc/core/issues"
+    "url": "https://github.com/hwfhc/drypot/issues"
   },
-  "homepage": "https://github.com/hwfhc/core#readme",
-  "dependencies": {
-    "express": "^4.16.0"
-  }
+  "homepage": "https://github.com/hwfhc/drypot#readme"
 }
