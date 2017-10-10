@@ -1,5 +1,5 @@
 (function (){
-    const interpret = require('./interpret');
+    const compiler = require('./compiler');
 
     const components = document.getElementsByClassName('dp-component');
     const dynamic = document.getElementsByClassName('dp-dynamic');
@@ -23,7 +23,7 @@
         for(let i=0;i<element.length;i++){
             let innerHTML = element[i].innerHTML;
 
-            interpret(innerHTML,function(result){
+            compiler(innerHTML,function(result){
                 element[i].innerHTML = result;
             });
         }
@@ -50,7 +50,7 @@
         var input = inputStream(code);
         var token = tokenStream(input);
         var parse = parseDynamicHtml(token);
-        interpretDynamicHtml(parse,function(result){
+        compilerDynamicHtml(parse,function(result){
             console.log(result);
         });
         console.log(parse);

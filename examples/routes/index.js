@@ -1,11 +1,20 @@
 module.exports = initRoutes;
 
 function initRoutes(app,directory){
+    app.get('/',function(req,res){
+        res.redirect('/home/1/test');
+    });
     app.get('/home/:id/test',function(req,res){
         res.sendFile(directory + '/views/index.html');
     });
 
-     app.get('/css/:file',function(req,res){
+    app.get('/user/:id/username',function(req,res){
+        res.send('!!!' + req.params['id'] + '???');
+    });
+
+
+
+    app.get('/css/:file',function(req,res){
         res.sendFile(directory + '/public/css/' + req.paramsfile);
     });
 
@@ -13,8 +22,8 @@ function initRoutes(app,directory){
         res.sendFile(directory + '/public/javascripts/' + req.paramsfile);
     });
 
-    app.get('/drypot.min.js',function(req,res){
-        res.sendFile(`${directory}/drypot.min.js`);
+    app.get('/drypot.js',function(req,res){
+        res.sendFile(`${directory}/drypot.js`);
     });
 
     app.get('/components/:file',function(req,res){
@@ -25,9 +34,5 @@ function initRoutes(app,directory){
         res.sendFile(`${directory}/components/${req.params['file']}/index.css`);
     });
 
-
-    app.get('/user/:id/username',function(req,res){
-        res.send('!!!' + req.params['id'] + '???');
-    });
 
 }

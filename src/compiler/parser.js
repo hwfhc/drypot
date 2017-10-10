@@ -1,9 +1,9 @@
 module.exports = parseDynamicHtml;
 
-const tokenStream = require('./token');
+const lexer = require('./lexer');
 
 function parseDynamicHtml(code){
-    var input = tokenStream(code);
+    var input = lexer(code);
 
     var html = [];
     while (!input.eof()){

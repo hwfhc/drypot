@@ -68,7 +68,7 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (){
-    const interpret = __webpack_require__(1);
+    const compiler = __webpack_require__(1);
 
     const components = document.getElementsByClassName('dp-component');
     const dynamic = document.getElementsByClassName('dp-dynamic');
@@ -92,7 +92,7 @@
         for(let i=0;i<element.length;i++){
             let innerHTML = element[i].innerHTML;
 
-            interpret(innerHTML,function(result){
+            compiler(innerHTML,function(result){
                 element[i].innerHTML = result;
             });
         }
@@ -119,7 +119,7 @@
         var input = inputStream(code);
         var token = tokenStream(input);
         var parse = parseDynamicHtml(token);
-        interpretDynamicHtml(parse,function(result){
+        compilerDynamicHtml(parse,function(result){
             console.log(result);
         });
         console.log(parse);
@@ -131,10 +131,10 @@
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const interpret = __webpack_require__(2);
+const interpreter = __webpack_require__(2);
 
 module.exports = function(text,callback){
-    interpret(text,callback);
+    interpreter(text,callback);
 };
 
 
@@ -144,7 +144,7 @@ module.exports = function(text,callback){
 
 module.exports = interpretDynamicHtml;
 
-const parse = __webpack_require__(3);
+const parser = __webpack_require__(3);
 
 const call = (function call(){
     function call(func,arg,callback){
@@ -175,7 +175,7 @@ const call = (function call(){
 
 
 function interpretDynamicHtml(code,callback){
-    var input = parse(code);
+    var input = parser(code);
 
     var html = '';
     var arr = input.html;
@@ -201,10 +201,10 @@ function interpretDynamicHtml(code,callback){
 
 
     function interpret(input,callback){
-        if(input.type === 'text') callback(input.value);
-        if(input.type === 'num') callback(interpret_num(input));
-        if(input.type === 'call') interpret_call(input,callback);
-        if(input.type === 'str') interpret_str(input,callback);
+        if(is_text(input)) callback(input.value);
+        if(is_num(input)) callback(interpret_num(input));
+        if(is_call(input)) interpret_call(input,callback);
+        if(is_str(input)) interpret_str(input,callback);
     }
 
     function interpret_call(input,callback){
@@ -253,6 +253,20 @@ function interpretDynamicHtml(code,callback){
     function interpret_num(input){
         return input.value;
     }
+
+    function is_text(input){
+        return input.type === 'text';
+    }
+    function is_num(input){
+        return input.type === 'num';
+    }
+    function is_call(input){
+        return input.type === 'call';
+    }
+    function is_str(input){
+        return input.type === 'str';
+    }
+
 }
 
 
@@ -264,10 +278,10 @@ function interpretDynamicHtml(code,callback){
 
 module.exports = parseDynamicHtml;
 
-const tokenStream = __webpack_require__(4);
+const lexer = __webpack_require__(4);
 
 function parseDynamicHtml(code){
-    var input = tokenStream(code);
+    var input = lexer(code);
 
     var html = [];
     while (!input.eof()){
@@ -536,6 +550,15 @@ function tokenStream(code) {
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const input = __webpack_require__(6);
+
+module.exports = input;
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = inputStream;

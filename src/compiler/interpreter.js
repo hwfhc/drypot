@@ -1,6 +1,6 @@
 module.exports = interpretDynamicHtml;
 
-const parse = require('./parse');
+const parser = require('./parser');
 
 const call = (function call(){
     function call(func,arg,callback){
@@ -31,7 +31,7 @@ const call = (function call(){
 
 
 function interpretDynamicHtml(code,callback){
-    var input = parse(code);
+    var input = parser(code);
 
     var html = '';
     var arr = input.html;
@@ -57,10 +57,10 @@ function interpretDynamicHtml(code,callback){
 
 
     function interpret(input,callback){
-        if(input.type === 'text') callback(input.value);
-        if(input.type === 'num') callback(interpret_num(input));
-        if(input.type === 'call') interpret_call(input,callback);
-        if(input.type === 'str') interpret_str(input,callback);
+        if(is_text(input)) callback(input.value);
+        if(is_num(input)) callback(interpret_num(input));
+        if(is_call(input)) interpret_call(input,callback);
+        if(is_str(input)) interpret_str(input,callback);
     }
 
     function interpret_call(input,callback){
@@ -109,6 +109,20 @@ function interpretDynamicHtml(code,callback){
     function interpret_num(input){
         return input.value;
     }
+
+    function is_text(input){
+        return input.type === 'text';
+    }
+    function is_num(input){
+        return input.type === 'num';
+    }
+    function is_call(input){
+        return input.type === 'call';
+    }
+    function is_str(input){
+        return input.type === 'str';
+    }
+
 }
 
 
