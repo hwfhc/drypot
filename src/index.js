@@ -3,6 +3,7 @@
 
     const components = document.getElementsByClassName('dp-component');
     const dynamic = document.getElementsByClassName('dp-dynamic');
+    const array = document.getElementsByClassName('dp-array');
 
     (function initComponents(){
         for(var i=0;i<components.length;i++){
@@ -38,21 +39,5 @@
         };
         xhttp.open(method,url, true);
         xhttp.send();
-    }
-
-
-    function demo(){
-        //var code = "asd  af{{ajax (`/homePgae/${getPathname(13 + 126,12, a  = 5,`asf449`)}/test`)}}sadfsf";
-        var code = "asd  af   {{ajax (`/user/${getPathname(2)}/username`)}}  sadfsf";
-
-        console.log(code);
-
-        var input = inputStream(code);
-        var token = tokenStream(input);
-        var parse = parseDynamicHtml(token);
-        compilerDynamicHtml(parse,function(result){
-            console.log(result);
-        });
-        console.log(parse);
     }
 })();

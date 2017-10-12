@@ -72,6 +72,7 @@
 
     const components = document.getElementsByClassName('dp-component');
     const dynamic = document.getElementsByClassName('dp-dynamic');
+    const array = document.getElementsByClassName('dp-array');
 
     (function initComponents(){
         for(var i=0;i<components.length;i++){
@@ -107,22 +108,6 @@
         };
         xhttp.open(method,url, true);
         xhttp.send();
-    }
-
-
-    function demo(){
-        //var code = "asd  af{{ajax (`/homePgae/${getPathname(13 + 126,12, a  = 5,`asf449`)}/test`)}}sadfsf";
-        var code = "asd  af   {{ajax (`/user/${getPathname(2)}/username`)}}  sadfsf";
-
-        console.log(code);
-
-        var input = inputStream(code);
-        var token = tokenStream(input);
-        var parse = parseDynamicHtml(token);
-        compilerDynamicHtml(parse,function(result){
-            console.log(result);
-        });
-        console.log(parse);
     }
 })();
 
@@ -276,7 +261,10 @@ function interpretDynamicHtml(code,callback){
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = parseDynamicHtml;
+module.exports = {
+    parseDynamicHtml,
+    parseCode
+};
 
 const lexer = __webpack_require__(4);
 
@@ -298,102 +286,108 @@ function parseDynamicHtml(code){
         if(is_code_end(tok)) return null;
         return input.next();
     }
+}
 
-    function is_text(tok){
-        if(tok.type === 'text') return true;
-        return false;
+function parseCode(code){
+    var input = lexer(code);
+
+    return { type: "code", value: parse_code() };
+}
+
+function is_text(tok){
+    if(tok.type === 'text') return true;
+    return false;
+}
+function is_code(tok){
+    if(tok.type === 'code' && tok.value === '{{'){
+        input.next();
+        return true;
     }
-    function is_code(tok){
-        if(tok.type === 'code' && tok.value === '{{'){
+    return false;
+}
+function is_code_end(tok){
+    if(tok.type === 'code' && tok.value === '}}'){
+        input.next();
+        return true;
+    }
+    return false;
+}
+
+function parse_text(){
+    return input.next();
+}
+function parse_code(){
+    var tok = input.next();
+
+    if(is_call(tok)) return parse_call(tok);
+    if(is_str(tok)) return parse_str(tok);
+    //if(is_bin_exp(tok)) return parse_str();
+    //if(is_end(tok)) return parse_str();
+    if(is_num(tok)) return parse_num(tok);
+}
+
+function parse_call(tok){
+    return { type : 'call', func : tok.value, arguments : get_arguments()}
+}
+function parse_str(tok){
+    var parts = [];
+    parts.push(tok);
+
+    while (!input.eof()){
+        if(is_str(input.peek())){
+            parts.push(input.next());
+            continue;
+        }
+        if(is_var_in_str(input.peek())){
             input.next();
-            return true;
+            parts.push(parse_code());
+            skip_punc('}');
+            continue;
         }
-        return false;
+        break;
     }
-    function is_code_end(tok){
-        if(tok.type === 'code' && tok.value === '}}'){
-            input.next();
-            return true;
-        }
-        return false;
-    }
+    return { type: "str", parts: parts };
 
-    function parse_text(){
-        return input.next();
+    function is_var_in_str(tok){
+        return tok.value === '${' && tok.type == "punc";
     }
-    function parse_code(){
-        var tok = input.next();
+}
+function parse_num(tok){
+    return tok;
+}
 
-        if(is_call(tok)) return parse_call(tok);
-        if(is_str(tok)) return parse_str(tok);
-        //if(is_bin_exp(tok)) return parse_str();
-        //if(is_end(tok)) return parse_str();
-        if(is_num(tok)) return parse_num(tok);
-    }
+function is_str(tok){
+    if(tok.type === 'str') return true;
+    return false;
+}
+function is_call(tok){
+    if(is_punc('(')) return true;
+    return false;
+}
+function is_num(tok){
+    if(tok.type === 'num') return true;
+    return false;
+}
 
-    function parse_call(tok){
-        return { type : 'call', func : tok.value, arguments : get_arguments()}
+function is_punc(ch) {
+    var tok = input.peek();
+    return tok && tok.type == "punc" && (!ch || tok.value == ch) && tok;
+}
+function get_arguments(){
+    var arg = [], first = true;
+    skip_punc('(');
+    while (!input.eof()) {
+        if (is_punc(')')) break;
+        if (first) {first = false;}else {skip_punc(',');}
+        if (is_punc(')')) break;
+        arg.push(parse_code());
     }
-    function parse_str(tok){
-        var parts = [];
-        parts.push(tok);
-
-        while (!input.eof()){
-            if(is_str(input.peek())){
-                parts.push(input.next());
-                continue;
-            }
-            if(is_var_in_str(input.peek())){
-                input.next();
-                parts.push(parse_code());
-                skip_punc('}');
-                continue;
-            }
-            break;
-        }
-        return { type: "str", parts: parts };
-
-        function is_var_in_str(tok){
-            return tok.value === '${' && tok.type == "punc";
-        }
-    }
-    function parse_num(tok){
-        return tok;
-    }
-
-    function is_str(tok){
-        if(tok.type === 'str') return true;
-        return false;
-    }
-    function is_call(tok){
-        if(is_punc('(')) return true;
-        return false;
-    }
-    function is_num(tok){
-        if(tok.type === 'num') return true;
-        return false;
-    }
-
-    function is_punc(ch) {
-        var tok = input.peek();
-        return tok && tok.type == "punc" && (!ch || tok.value == ch) && tok;
-    }
-    function get_arguments(){
-        var arg = [], first = true;
-        skip_punc('(');
-        while (!input.eof()) {
-            if (is_punc(')')) break;
-            if (first) {first = false;}else {skip_punc(',');}
-            if (is_punc(')')) break;
-            arg.push(parse_code());
-        }
-        skip_punc(')');
-        return arg;
-    }
-    function skip_punc(ch) {
-        if (is_punc(ch)) input.next();
-        else input.croak("Expecting punctuation: \"" + ch + "\"");
-    }
+    skip_punc(')');
+    return arg;
+}
+function skip_punc(ch) {
+    if (is_punc(ch)) input.next();
+    else input.croak("Expecting punctuation: \"" + ch + "\"");
 }
 
 
@@ -550,15 +544,6 @@ function tokenStream(code) {
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const input = __webpack_require__(6);
-
-module.exports = input;
-
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = inputStream;
