@@ -8,6 +8,12 @@ function initRoutes(app,directory){
         res.sendFile(directory + '/views/index.html');
     });
 
+    app.get('/test',function(req,res){
+        var data = ['1'];
+        res.send(JSON.stringify(data));
+    });
+
+
     app.get('/user/:id/username',function(req,res){
         res.send('!!!' + req.params['id'] + '???');
     });

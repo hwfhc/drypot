@@ -15,11 +15,11 @@
 
         <list-blue class="dp-component"></list-blue>
 
-        <p class="dp-dynamic">{{ajax (`/user/${getPathname(2)}/username`)}}</p>
+        <!--<p class="dp-dynamic">{{ajax (`/user/${getPathname(2)}/username`)}}</p>
+        <p class="dp-dynamic">{{ajax}}</p>-->
 
-        <div class="dp-array" dp-data="ajax(`/questionList`)">
-            <p>{{title}}</p>
-            <p>{{description}}</p>
+        <div class="dp-for" dp-data="{{ajax(`/test`)}}">
+            <p>{{item}}</p>
         </div>
 
     </body>

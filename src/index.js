@@ -1,16 +1,16 @@
 (function (){
     const compiler = require('./compiler');
 
-    const components = document.getElementsByClassName('dp-component');
-    const dynamic = document.getElementsByClassName('dp-dynamic');
-    const array = document.getElementsByClassName('dp-array');
+    const dp_component = document.getElementsByClassName('dp-component');
+    const dp_dynamic = document.getElementsByClassName('dp-dynamic');
+    const dp_for = document.getElementsByClassName('dp-for');
 
-    (function initComponents(){
-        for(var i=0;i<components.length;i++){
-            let name = components[i].tagName.toLowerCase();
+    (function initComponent(){
+        for(var i=0;i<dp_component.length;i++){
+            let name = dp_component[i].tagName.toLowerCase();
 
             // I can add a module to manage ajax request, and there is just one ajax request to the same resources at the same time
-            getDataWithAJAX('GET',`/components/${name}`,components[i],function(data,component){
+            getDataWithAJAX('GET',`/components/${name}`,dp_component[i],function(data,component){
                 data += `<link href="/components/${name}/index.css" rel="stylesheet" type="text/css" />`;
                 component.innerHTML = data;
             });
@@ -18,14 +18,35 @@
     })();
 
     (function initDynamic(){
-        var reg = /\{\{[^\)]+\}\}/g;
-        var element = dynamic;
+        var element = dp_dynamic;
 
         for(let i=0;i<element.length;i++){
             let innerHTML = element[i].innerHTML;
 
-            compiler(innerHTML,function(result){
+            compiler.interpretDynamicHtml(innerHTML,function(result){
                 element[i].innerHTML = result;
+            });
+        }
+    })();
+
+    (function initFor(){
+        var elements = dp_for;
+        for(let i=0;i<elements.length;i++){
+
+            let item = elements[i].innerHTML;
+            elements[i].innerHTML = '';
+
+            compiler.interpretDynamicHtml(elements[i].getAttribute('dp-data'),function(result){
+                var data = JSON.parse(result);
+                compiler.add('item',data);
+                var length = data.length
+
+                for(let j=0;j<length;j++){
+                    compiler.interpretDynamicHtml(item,function(result){
+                        var test = result;
+                        elements[i].innerHTML += result;
+                    });
+                }
             });
         }
     })();

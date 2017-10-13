@@ -70,16 +70,16 @@
 (function (){
     const compiler = __webpack_require__(1);
 
-    const components = document.getElementsByClassName('dp-component');
-    const dynamic = document.getElementsByClassName('dp-dynamic');
-    const array = document.getElementsByClassName('dp-array');
+    const dp_component = document.getElementsByClassName('dp-component');
+    const dp_dynamic = document.getElementsByClassName('dp-dynamic');
+    const dp_for = document.getElementsByClassName('dp-for');
 
-    (function initComponents(){
-        for(var i=0;i<components.length;i++){
-            let name = components[i].tagName.toLowerCase();
+    (function initComponent(){
+        for(var i=0;i<dp_component.length;i++){
+            let name = dp_component[i].tagName.toLowerCase();
 
             // I can add a module to manage ajax request, and there is just one ajax request to the same resources at the same time
-            getDataWithAJAX('GET',`/components/${name}`,components[i],function(data,component){
+            getDataWithAJAX('GET',`/components/${name}`,dp_component[i],function(data,component){
                 data += `<link href="/components/${name}/index.css" rel="stylesheet" type="text/css" />`;
                 component.innerHTML = data;
             });
@@ -87,14 +87,35 @@
     })();
 
     (function initDynamic(){
-        var reg = /\{\{[^\)]+\}\}/g;
-        var element = dynamic;
+        var element = dp_dynamic;
 
         for(let i=0;i<element.length;i++){
             let innerHTML = element[i].innerHTML;
 
-            compiler(innerHTML,function(result){
+            compiler.interpretDynamicHtml(innerHTML,function(result){
                 element[i].innerHTML = result;
+            });
+        }
+    })();
+
+    (function initFor(){
+        var elements = dp_for;
+        for(let i=0;i<elements.length;i++){
+
+            let item = elements[i].innerHTML;
+            elements[i].innerHTML = '';
+
+            compiler.interpretDynamicHtml(elements[i].getAttribute('dp-data'),function(result){
+                var data = JSON.parse(result);
+                compiler.add('item',data);
+                var length = data.length
+
+                /*for(let j=0;j<length;j++){
+                    compiler.interpretDynamicHtml(item,function(result){
+                        var test = result;
+                        elements[i].innerHTML += result;
+                    });
+                }*/
             });
         }
     })();
@@ -118,20 +139,24 @@
 
 const interpreter = __webpack_require__(2);
 
-module.exports = function(text,callback){
-    interpreter(text,callback);
+module.exports.interpretDynamicHtml = function(text,callback){
+    interpreter.interpretDynamicHtml(text,callback);
 };
+
+module.exports.add = interpreter.add;
 
 
 /***/ }),
 /* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = interpretDynamicHtml;
+module.exports = {
+interpretDynamicHtml,add
+};
 
-const parser = __webpack_require__(3);
+const parser = __webpack_require__(3).parseDynamicHtml;
 
-const call = (function call(){
+const call = (function(){
     function call(func,arg,callback){
         arg.push(callback);
         funcPool[func].apply(window,arg);
@@ -158,6 +183,30 @@ const call = (function call(){
     return call;
 })();
 
+const scope = (function(){
+    var variable = {
+        ajax : 'asdfasfd',
+        };
+
+        function add(ident = undefined,value){
+        variable[ident] = value;
+        }
+
+        function get(ident){
+        return variable[ident];
+        }
+
+        return {
+        add,
+        get
+        };
+
+})();
+
+function add(ident,value){
+    scope.add(ident,value)
+}
+
 
 function interpretDynamicHtml(code,callback){
     var input = parser(code);
@@ -169,6 +218,7 @@ function interpretDynamicHtml(code,callback){
     for(let i=0;i<arr.length;i++){
         var promise = new Promise(function(resolve, reject) {
             interpret(arr[i],function(result){
+            console.log(result);
                 arr[i] = result;
                 resolve();
             });
@@ -189,6 +239,13 @@ function interpretDynamicHtml(code,callback){
         if(is_text(input)) callback(input.value);
         if(is_num(input)) callback(interpret_num(input));
         if(is_call(input)) interpret_call(input,callback);
+        if(is_item(input)) {
+            var item = scope.get('item');
+            var data = item[0];
+            //var data = item.splice(0,1)[0];
+            callback(1);
+        }
+        if(is_var(input)) callback(interpret_var(input));
         if(is_str(input)) interpret_str(input,callback);
     }
 
@@ -235,6 +292,9 @@ function interpretDynamicHtml(code,callback){
             callback(text);
         });
     }
+    function interpret_var(input){
+        return scope.get(input.value);
+    }
     function interpret_num(input){
         return input.value;
     }
@@ -247,6 +307,12 @@ function interpretDynamicHtml(code,callback){
     }
     function is_call(input){
         return input.type === 'call';
+    }
+    function is_item(input){
+        return input.value === 'item';
+    }
+    function is_var(input){
+        return input.type === 'var';
     }
     function is_str(input){
         return input.type === 'str';
@@ -286,6 +352,112 @@ function parseDynamicHtml(code){
         if(is_code_end(tok)) return null;
         return input.next();
     }
+
+    function is_text(tok){
+        if(tok.type === 'text') return true;
+        return false;
+    }
+    function is_code(tok){
+        if(tok.type === 'code' && tok.value === '{{'){
+            input.next();
+            return true;
+        }
+        return false;
+    }
+    function is_code_end(tok){
+        if(tok.type === 'code' && tok.value === '}}'){
+            input.next();
+            return true;
+        }
+        return false;
+    }
+
+    function parse_text(){
+        return input.next();
+    }
+    function parse_code(){
+        var tok = input.next();
+
+        if(is_call(tok)) return parse_call(tok);
+        if(is_str(tok)) return parse_str(tok);
+        if(is_ident(tok)) return parse_ident(tok);
+        //if(is_bin_exp(tok)) return parse_str();
+        //if(is_end(tok)) return parse_str();
+        if(is_num(tok)) return parse_num(tok);
+    }
+
+    function parse_call(tok){
+        return { type : 'call', func : tok.value, arguments : get_arguments()}
+    }
+    function parse_str(tok){
+        var parts = [];
+        parts.push(tok);
+
+        while (!input.eof()){
+            if(is_str(input.peek())){
+                parts.push(input.next());
+                continue;
+            }
+            if(is_var_in_str(input.peek())){
+                input.next();
+                parts.push(parse_code());
+                skip_punc('}');
+                continue;
+            }
+            break;
+        }
+        return { type: "str", parts: parts };
+
+        function is_var_in_str(tok){
+            return tok.value === '${' && tok.type == "punc";
+        }
+    }
+    function parse_ident(tok){
+        return tok;
+    }
+    function parse_num(tok){
+        return tok;
+    }
+
+    function is_str(tok){
+        if(tok.type === 'str') return true;
+        return false;
+    }
+    function is_call(tok){
+        if(is_punc('(')) return true;
+        return false;
+    }
+    function is_ident(tok){
+        if(tok.type === 'var') return true;
+        return false;
+    }
+    function is_num(tok){
+        if(tok.type === 'num') return true;
+        return false;
+    }
+
+    function is_punc(ch) {
+        var tok = input.peek();
+        return tok && tok.type == "punc" && (!ch || tok.value == ch) && tok;
+    }
+    function get_arguments(){
+        var arg = [], first = true;
+        skip_punc('(');
+        while (!input.eof()) {
+            if (is_punc(')')) break;
+            if (first) {first = false;}else {skip_punc(',');}
+            if (is_punc(')')) break;
+            arg.push(parse_code());
+        }
+        skip_punc(')');
+        return arg;
+    }
+    function skip_punc(ch) {
+        if (is_punc(ch)) input.next();
+        else input.croak("Expecting punctuation: \"" + ch + "\"");
+    }
+
+
 }
 
 function parseCode(code){
@@ -293,104 +465,6 @@ function parseCode(code){
 
     return { type: "code", value: parse_code() };
 }
-
-function is_text(tok){
-    if(tok.type === 'text') return true;
-    return false;
-}
-function is_code(tok){
-    if(tok.type === 'code' && tok.value === '{{'){
-        input.next();
-        return true;
-    }
-    return false;
-}
-function is_code_end(tok){
-    if(tok.type === 'code' && tok.value === '}}'){
-        input.next();
-        return true;
-    }
-    return false;
-}
-
-function parse_text(){
-    return input.next();
-}
-function parse_code(){
-    var tok = input.next();
-
-    if(is_call(tok)) return parse_call(tok);
-    if(is_str(tok)) return parse_str(tok);
-    //if(is_bin_exp(tok)) return parse_str();
-    //if(is_end(tok)) return parse_str();
-    if(is_num(tok)) return parse_num(tok);
-}
-
-function parse_call(tok){
-    return { type : 'call', func : tok.value, arguments : get_arguments()}
-}
-function parse_str(tok){
-    var parts = [];
-    parts.push(tok);
-
-    while (!input.eof()){
-        if(is_str(input.peek())){
-            parts.push(input.next());
-            continue;
-        }
-        if(is_var_in_str(input.peek())){
-            input.next();
-            parts.push(parse_code());
-            skip_punc('}');
-            continue;
-        }
-        break;
-    }
-    return { type: "str", parts: parts };
-
-    function is_var_in_str(tok){
-        return tok.value === '${' && tok.type == "punc";
-    }
-}
-function parse_num(tok){
-    return tok;
-}
-
-function is_str(tok){
-    if(tok.type === 'str') return true;
-    return false;
-}
-function is_call(tok){
-    if(is_punc('(')) return true;
-    return false;
-}
-function is_num(tok){
-    if(tok.type === 'num') return true;
-    return false;
-}
-
-function is_punc(ch) {
-    var tok = input.peek();
-    return tok && tok.type == "punc" && (!ch || tok.value == ch) && tok;
-}
-function get_arguments(){
-    var arg = [], first = true;
-    skip_punc('(');
-    while (!input.eof()) {
-        if (is_punc(')')) break;
-        if (first) {first = false;}else {skip_punc(',');}
-        if (is_punc(')')) break;
-        arg.push(parse_code());
-    }
-    skip_punc(')');
-    return arg;
-}
-function skip_punc(ch) {
-    if (is_punc(ch)) input.next();
-    else input.croak("Expecting punctuation: \"" + ch + "\"");
-}
-
-
 
 
 /***/ }),
