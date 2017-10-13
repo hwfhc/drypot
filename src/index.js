@@ -1,8 +1,10 @@
 (function (){
     const compiler = require('./compiler');
+    const scope = require('./compiler/lib/scope');
 
     const dp_component = document.getElementsByClassName('dp-component');
     const dp_dynamic = document.getElementsByClassName('dp-dynamic');
+    const dp_item = document.getElementsByClassName('dp-item');
     const dp_for = document.getElementsByClassName('dp-for');
 
     (function initComponent(){
@@ -23,17 +25,36 @@
         for(let i=0;i<element.length;i++){
             let innerHTML = element[i].innerHTML;
 
-            compiler.interpretDynamicHtml(innerHTML,function(result){
+            compiler(innerHTML,function(result){
                 element[i].innerHTML = result;
             });
         }
     })();
 
-    (function initFor(){
-        var elements = dp_for;
-        for(let i=0;i<elements.length;i++){
+    (function initItem(){
+        var element = dp_item;
 
-            let item = elements[i].innerHTML;
+        for(let i=0;i<element.length;i++){
+            let innerHTML = element[i].innerHTML;
+            let name = element[i].getAttribute('dp-name');
+
+            compiler(element[i].getAttribute('dp-data'),function(result){
+                scope.set(name,JSON.parse(result));
+
+                compiler(innerHTML,function(result){
+                    element[i].innerHTML = result;
+                });
+            });
+        }
+    })();
+
+
+
+    /*(function initFor(){
+        var element = dp_for;
+        for(let i=0;i<element.length;i++){
+
+            let item = element[i].innerHTML;
             elements[i].innerHTML = '';
 
             compiler.interpretDynamicHtml(elements[i].getAttribute('dp-data'),function(result){
@@ -49,7 +70,7 @@
                 }
             });
         }
-    })();
+    })();*/
 
     function getDataWithAJAX(method,url,element,callback) {
         var xhttp = new XMLHttpRequest();

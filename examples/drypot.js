@@ -60,18 +60,44 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports) {
+
+module.exports = { set,get,getChild };
+
+const scope = {
+    ajax : 'asdfadsf',
+    demo : { test:123 }
+}
+
+function set(ident = undefined,value){
+    scope[ident] = value;
+}
+
+function get(ident){
+    return scope[ident];
+}
+
+function getChild(ident,child){
+    return scope[ident][child];
+}
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (){
-    const compiler = __webpack_require__(1);
+    const compiler = __webpack_require__(2);
+    const scope = __webpack_require__(0);
 
     const dp_component = document.getElementsByClassName('dp-component');
     const dp_dynamic = document.getElementsByClassName('dp-dynamic');
+    const dp_item = document.getElementsByClassName('dp-item');
     const dp_for = document.getElementsByClassName('dp-for');
 
     (function initComponent(){
@@ -92,13 +118,32 @@
         for(let i=0;i<element.length;i++){
             let innerHTML = element[i].innerHTML;
 
-            compiler.interpretDynamicHtml(innerHTML,function(result){
+            compiler(innerHTML,function(result){
                 element[i].innerHTML = result;
             });
         }
     })();
 
-    (function initFor(){
+    (function initItem(){
+        var element = dp_item;
+
+        for(let i=0;i<element.length;i++){
+            let innerHTML = element[i].innerHTML;
+            let name = element[i].getAttribute('dp-name');
+
+            compiler(element[i].getAttribute('dp-data'),function(result){
+                scope.set(name,JSON.parse(result));
+
+                compiler(innerHTML,function(result){
+                    element[i].innerHTML = result;
+                });
+            });
+        }
+    })();
+
+
+
+    /*(function initFor(){
         var elements = dp_for;
         for(let i=0;i<elements.length;i++){
 
@@ -110,15 +155,15 @@
                 compiler.add('item',data);
                 var length = data.length
 
-                /*for(let j=0;j<length;j++){
+                for(let j=0;j<length;j++){
                     compiler.interpretDynamicHtml(item,function(result){
                         var test = result;
                         elements[i].innerHTML += result;
                     });
-                }*/
+                }
             });
         }
-    })();
+    })();*/
 
     function getDataWithAJAX(method,url,element,callback) {
         var xhttp = new XMLHttpRequest();
@@ -134,78 +179,25 @@
 
 
 /***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const interpreter = __webpack_require__(2);
-
-module.exports.interpretDynamicHtml = function(text,callback){
-    interpreter.interpretDynamicHtml(text,callback);
-};
-
-module.exports.add = interpreter.add;
-
-
-/***/ }),
 /* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = {
-interpretDynamicHtml,add
+const interpreter = __webpack_require__(3);
+
+module.exports = function(text,callback){
+    interpreter(text,callback);
 };
 
-const parser = __webpack_require__(3).parseDynamicHtml;
 
-const call = (function(){
-    function call(func,arg,callback){
-        arg.push(callback);
-        funcPool[func].apply(window,arg);
-    }
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
 
-    var funcPool = {};
-    funcPool.getPathname = function(number,callback){
-        callback(window.location.pathname.split('/')[number]);
-    }
-    funcPool.ajax = function (url,callback){
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function()
-        {
-            if (xmlhttp.readyState==4 && xmlhttp.status==200)
-            {
-                callback(xmlhttp.responseText);
-            }
-        }
+module.exports = interpretDynamicHtml;
 
-        xmlhttp.open("GET",url,true);
-        xmlhttp.send();
-    }
-
-    return call;
-})();
-
-const scope = (function(){
-    var variable = {
-        ajax : 'asdfasfd',
-        };
-
-        function add(ident = undefined,value){
-        variable[ident] = value;
-        }
-
-        function get(ident){
-        return variable[ident];
-        }
-
-        return {
-        add,
-        get
-        };
-
-})();
-
-function add(ident,value){
-    scope.add(ident,value)
-}
+const parser = __webpack_require__(4);
+const call = __webpack_require__(7);
+const scope = __webpack_require__(0);
 
 
 function interpretDynamicHtml(code,callback){
@@ -218,7 +210,6 @@ function interpretDynamicHtml(code,callback){
     for(let i=0;i<arr.length;i++){
         var promise = new Promise(function(resolve, reject) {
             interpret(arr[i],function(result){
-            console.log(result);
                 arr[i] = result;
                 resolve();
             });
@@ -239,13 +230,8 @@ function interpretDynamicHtml(code,callback){
         if(is_text(input)) callback(input.value);
         if(is_num(input)) callback(interpret_num(input));
         if(is_call(input)) interpret_call(input,callback);
-        if(is_item(input)) {
-            var item = scope.get('item');
-            var data = item[0];
-            //var data = item.splice(0,1)[0];
-            callback(1);
-        }
         if(is_var(input)) callback(interpret_var(input));
+        if(is_dot(input)) callback(interpret_dot(input));
         if(is_str(input)) interpret_str(input,callback);
     }
 
@@ -295,6 +281,9 @@ function interpretDynamicHtml(code,callback){
     function interpret_var(input){
         return scope.get(input.value);
     }
+    function interpret_dot(input){
+        return scope.getChild(input.value,input.arrow.value);
+    }
     function interpret_num(input){
         return input.value;
     }
@@ -308,11 +297,11 @@ function interpretDynamicHtml(code,callback){
     function is_call(input){
         return input.type === 'call';
     }
-    function is_item(input){
-        return input.value === 'item';
-    }
     function is_var(input){
         return input.type === 'var';
+    }
+    function is_dot(input){
+        return input.type === 'dot';
     }
     function is_str(input){
         return input.type === 'str';
@@ -324,15 +313,13 @@ function interpretDynamicHtml(code,callback){
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = {
-    parseDynamicHtml,
-    parseCode
-};
+module.exports = parseDynamicHtml;
 
-const lexer = __webpack_require__(4);
+
+const lexer = __webpack_require__(5);
 
 function parseDynamicHtml(code){
     var input = lexer(code);
@@ -380,6 +367,7 @@ function parseDynamicHtml(code){
 
         if(is_call(tok)) return parse_call(tok);
         if(is_str(tok)) return parse_str(tok);
+        if(is_punc('.')) return parse_dot(tok);
         if(is_ident(tok)) return parse_ident(tok);
         //if(is_bin_exp(tok)) return parse_str();
         //if(is_end(tok)) return parse_str();
@@ -411,6 +399,14 @@ function parseDynamicHtml(code){
         function is_var_in_str(tok){
             return tok.value === '${' && tok.type == "punc";
         }
+    }
+    function parse_dot(tok){
+        input.next();
+        return {
+            type: 'dot',
+            value: tok.value,
+            arrow: parse_code()
+        };
     }
     function parse_ident(tok){
         return tok;
@@ -460,20 +456,15 @@ function parseDynamicHtml(code){
 
 }
 
-function parseCode(code){
-    var input = lexer(code);
-
-    return { type: "code", value: parse_code() };
-}
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = tokenStream;
 
-const inputStream = __webpack_require__(5);
+const inputStream = __webpack_require__(6);
 
 function tokenStream(code) {
     var input = inputStream(code);
@@ -547,8 +538,7 @@ function tokenStream(code) {
         }
 
         function is_str_end(ch){
-            return "`".indexOf(ch) >= 0;
-        }
+            return "`".indexOf(ch) >= 0; }
     }
     function read_var_in_str(){
         input.next();input.next();
@@ -588,7 +578,7 @@ function tokenStream(code) {
         return ch === '$';
     }
     function is_punc(ch){
-        return ",;(){}".indexOf(ch) >= 0;
+        return ",;(){}.".indexOf(ch) >= 0;
     }
     function is_op(ch){
         return "+-*/=".indexOf(ch) >= 0;
@@ -617,7 +607,7 @@ function tokenStream(code) {
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = inputStream;
@@ -688,6 +678,39 @@ function inputStream(input) {
     }
 
 }
+
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+module.exports = call;
+
+const funcPool = {};
+funcPool.getPathname = function(number,callback){
+    callback(window.location.pathname.split('/')[number]);
+}
+funcPool.ajax = function (url,callback){
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function()
+    {
+        if (xmlhttp.readyState==4 && xmlhttp.status==200)
+        {
+            callback(xmlhttp.responseText);
+        }
+    }
+
+    xmlhttp.open("GET",url,true);
+    xmlhttp.send();
+}
+
+
+function call(func,arg,callback){
+    arg.push(callback);
+    funcPool[func].apply(window,arg);
+}
+
 
 
 

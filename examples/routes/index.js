@@ -9,7 +9,19 @@ function initRoutes(app,directory){
     });
 
     app.get('/test',function(req,res){
-        var data = ['1'];
+        var data = {
+            first: 'first',
+            two: 'two'
+        };
+        res.send(JSON.stringify(data));
+    });
+
+    app.get('/render',function(req,res){
+        var data = [
+            {title:'wawa'},
+            {title:'hehe'},
+            {title:'fuck'}
+        ]
         res.send(JSON.stringify(data));
     });
 

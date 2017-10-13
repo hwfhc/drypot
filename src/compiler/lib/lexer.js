@@ -74,8 +74,7 @@ function tokenStream(code) {
         }
 
         function is_str_end(ch){
-            return "`".indexOf(ch) >= 0;
-        }
+            return "`".indexOf(ch) >= 0; }
     }
     function read_var_in_str(){
         input.next();input.next();
@@ -115,7 +114,7 @@ function tokenStream(code) {
         return ch === '$';
     }
     function is_punc(ch){
-        return ",;(){}".indexOf(ch) >= 0;
+        return ",;(){}.".indexOf(ch) >= 0;
     }
     function is_op(ch){
         return "+-*/=".indexOf(ch) >= 0;

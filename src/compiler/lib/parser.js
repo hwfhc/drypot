@@ -1,7 +1,5 @@
-module.exports = {
-    parseDynamicHtml,
-    parseCode
-};
+module.exports = parseDynamicHtml;
+
 
 const lexer = require('./lexer');
 
@@ -51,6 +49,7 @@ function parseDynamicHtml(code){
 
         if(is_call(tok)) return parse_call(tok);
         if(is_str(tok)) return parse_str(tok);
+        if(is_punc('.')) return parse_dot(tok);
         if(is_ident(tok)) return parse_ident(tok);
         //if(is_bin_exp(tok)) return parse_str();
         //if(is_end(tok)) return parse_str();
@@ -82,6 +81,14 @@ function parseDynamicHtml(code){
         function is_var_in_str(tok){
             return tok.value === '${' && tok.type == "punc";
         }
+    }
+    function parse_dot(tok){
+        input.next();
+        return {
+            type: 'dot',
+            value: tok.value,
+            arrow: parse_code()
+        };
     }
     function parse_ident(tok){
         return tok;
@@ -131,8 +138,3 @@ function parseDynamicHtml(code){
 
 }
 
-function parseCode(code){
-    var input = lexer(code);
-
-    return { type: "code", value: parse_code() };
-}
