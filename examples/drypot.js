@@ -144,10 +144,10 @@ function getChild(ident,child){
 
 
     /*(function initFor(){
-        var elements = dp_for;
-        for(let i=0;i<elements.length;i++){
+        var element = dp_for;
+        for(let i=0;i<element.length;i++){
 
-            let item = elements[i].innerHTML;
+            let item = element[i].innerHTML;
             elements[i].innerHTML = '';
 
             compiler.interpretDynamicHtml(elements[i].getAttribute('dp-data'),function(result){

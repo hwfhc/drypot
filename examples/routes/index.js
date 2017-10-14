@@ -40,8 +40,8 @@ function initRoutes(app,directory){
         res.sendFile(directory + '/public/javascripts/' + req.paramsfile);
     });
 
-    app.get('/drypot.js',function(req,res){
-        res.sendFile(`${directory}/drypot.js`);
+    app.get('/drypot.min.js',function(req,res){
+        res.sendFile(`${directory}/drypot.min.js`);
     });
 
     app.get('/components/:file',function(req,res){
