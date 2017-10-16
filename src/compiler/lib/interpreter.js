@@ -12,6 +12,8 @@ function interpretDynamicHtml(code,callback){
     var arr = input.html;
     var promiseArr = [];
 
+    var kw = 'item';
+
     for(let i=0;i<arr.length;i++){
         var promise = new Promise(function(resolve, reject) {
             interpret(arr[i],function(result){
@@ -32,6 +34,11 @@ function interpretDynamicHtml(code,callback){
 
 
     function interpret(input,callback){
+        if(input.value === 'item' && input.type === 'var')
+        {
+            callback(scope.getItem('item'));
+            return;
+        }
         if(is_text(input)) callback(input.value);
         if(is_num(input)) callback(interpret_num(input));
         if(is_call(input)) interpret_call(input,callback);
@@ -103,7 +110,8 @@ function interpretDynamicHtml(code,callback){
         return input.type === 'call';
     }
     function is_var(input){
-        return input.type === 'var';
+        return input.type === 'var'&&
+            input.value != 'item';
     }
     function is_dot(input){
         return input.type === 'dot';

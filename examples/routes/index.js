@@ -18,13 +18,21 @@ function initRoutes(app,directory){
 
     app.get('/render',function(req,res){
         var data = [
-            {title:'wawa'},
-            {title:'hehe'},
-            {title:'fuck'}
+            'wawa',
+            'hehe',
+            'fuck'
         ]
         res.send(JSON.stringify(data));
     });
 
+    app.get('/first',function(req,res){
+        var data = [
+            '1',
+            '2',
+            '3'
+        ]
+        res.send(JSON.stringify(data));
+    });
 
     app.get('/user/:id/username',function(req,res){
         res.send('!!!' + req.params['id'] + '???');

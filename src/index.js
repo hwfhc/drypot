@@ -50,27 +50,28 @@
 
 
 
-    /*(function initFor(){
+    (function initFor(){
         var element = dp_for;
+
         for(let i=0;i<element.length;i++){
+            let item = element[i];
+            let html = item.innerHTML;
+            let name = item.getAttribute('dp-name');
 
-            let item = element[i].innerHTML;
-            elements[i].innerHTML = '';
+            item.innerHTML = '';
 
-            compiler.interpretDynamicHtml(elements[i].getAttribute('dp-data'),function(result){
-                var data = JSON.parse(result);
-                compiler.add('item',data);
-                var length = data.length
+            compiler(item.getAttribute('dp-data'),function(result){
+                var length = JSON.parse(result).length;
+                scope.set('item',JSON.parse(result));
 
                 for(let j=0;j<length;j++){
-                    compiler.interpretDynamicHtml(item,function(result){
-                        var test = result;
-                        elements[i].innerHTML += result;
+                    compiler(html,function(result){
+                        item.innerHTML += result;
                     });
                 }
             });
         }
-    })();*/
+    })();
 
     function getDataWithAJAX(method,url,element,callback) {
         var xhttp = new XMLHttpRequest();

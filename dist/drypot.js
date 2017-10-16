@@ -67,7 +67,7 @@
 /* 0 */
 /***/ (function(module, exports) {
 
-module.exports = { set,get,getChild };
+module.exports = { set,get,getChild,getItem };
 
 const scope = {
     ajax : 'asdfadsf',
@@ -80,6 +80,11 @@ function set(ident = undefined,value){
 
 function get(ident){
     return scope[ident];
+}
+
+function getItem(ident){
+    var data = scope[ident].splice(0,1);
+    return data[0];
 }
 
 function getChild(ident,child){
@@ -143,27 +148,28 @@ function getChild(ident,child){
 
 
 
-    /*(function initFor(){
+    (function initFor(){
         var element = dp_for;
+
         for(let i=0;i<element.length;i++){
+            let item = element[i];
+            let html = item.innerHTML;
+            let name = item.getAttribute('dp-name');
 
-            let item = element[i].innerHTML;
-            elements[i].innerHTML = '';
+            item.innerHTML = '';
 
-            compiler.interpretDynamicHtml(elements[i].getAttribute('dp-data'),function(result){
-                var data = JSON.parse(result);
-                compiler.add('item',data);
-                var length = data.length
+            compiler(item.getAttribute('dp-data'),function(result){
+                var length = JSON.parse(result).length;
+                scope.set('item',JSON.parse(result));
 
                 for(let j=0;j<length;j++){
-                    compiler.interpretDynamicHtml(item,function(result){
-                        var test = result;
-                        elements[i].innerHTML += result;
+                    compiler(html,function(result){
+                        item.innerHTML += result;
                     });
                 }
             });
         }
-    })();*/
+    })();
 
     function getDataWithAJAX(method,url,element,callback) {
         var xhttp = new XMLHttpRequest();
@@ -227,6 +233,11 @@ function interpretDynamicHtml(code,callback){
 
 
     function interpret(input,callback){
+        if(input.value === 'item' && input.type === 'var')
+        {
+            callback(scope.getItem('item'));
+            return;
+        }
         if(is_text(input)) callback(input.value);
         if(is_num(input)) callback(interpret_num(input));
         if(is_call(input)) interpret_call(input,callback);
