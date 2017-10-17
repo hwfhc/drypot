@@ -1,6 +1,16 @@
 const webpack = require('webpack');
 
-module.exports = [
+exports.develop = [
+    {
+        entry: `${__dirname}/../src/index.js`,
+        output: {
+            path: `${__dirname}/../examples`,
+            filename: 'drypot.min.js'
+        }
+    }
+]
+
+exports.production = [
     {
         entry: `${__dirname}/../src/index.js`,
         output: {
@@ -29,12 +39,5 @@ module.exports = [
             path: `${__dirname}/../dist`,
             filename: 'drypot.js'
         }
-    },
-    {
-        entry: `${__dirname}/../src/index.js`,
-        output: {
-            path: `${__dirname}/../examples`,
-            filename: 'drypot.min.js'
-        }
     }
-]
+];

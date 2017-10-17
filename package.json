@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "node build/build.js",
+    "build-pro": "node build/build.js --production",
     "test": "mocha -R ./src/compiler/input"
   },
   "repository": {

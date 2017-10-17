@@ -36,7 +36,7 @@ function interpretDynamicHtml(code,callback){
     function interpret(input,callback){
         if(input.value === 'item' && input.type === 'var')
         {
-            callback(scope.getItem('item'));
+            callback(scope.getItem());
             return;
         }
         if(is_text(input)) callback(input.value);
@@ -54,9 +54,7 @@ function interpretDynamicHtml(code,callback){
         for(let i=0;i<input.arguments.length;i++){
             arg[i] = input.arguments[i];
             var promise = new Promise(function(resolve, reject) {
-                interpret(arg[i],function(result){
-                    arg[i] = result;
-                    resolve();
+                interpret(arg[i],function(result){ arg[i] = result; resolve();
                 });
             });
             promiseArr.push(promise);
@@ -94,6 +92,7 @@ function interpretDynamicHtml(code,callback){
         return scope.get(input.value);
     }
     function interpret_dot(input){
+        if(input.value === 'item') return scope.getItemChild(input.arrow.value);
         return scope.getChild(input.value,input.arrow.value);
     }
     function interpret_num(input){

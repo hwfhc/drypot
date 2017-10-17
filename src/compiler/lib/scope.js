@@ -1,8 +1,18 @@
-module.exports = { set,get,getChild,getItem };
+module.exports = {
+    set,
+    get,
+    getChild,
+    setItem,
+    getItem,
+
+    getItemChild
+};
 
 const scope = {
     ajax : 'asdfadsf',
-    demo : { test:123 }
+    demo : { test:123 },
+    tem: [],
+    item: {}
 }
 
 function set(ident = undefined,value){
@@ -14,10 +24,17 @@ function get(ident){
 }
 
 function getItem(ident){
-    var data = scope[ident].splice(0,1);
-    return data[0];
+    return scope.item;
 }
 
 function getChild(ident,child){
     return scope[ident][child];
+}
+
+function getItemChild(child){
+    return scope.item[child];
+}
+
+function setItem(){
+    scope.item = scope['tem'].splice(0,1)[0];
 }

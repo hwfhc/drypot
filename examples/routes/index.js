@@ -27,9 +27,10 @@ function initRoutes(app,directory){
 
     app.get('/first',function(req,res){
         var data = [
-            '1',
-            '2',
-            '3'
+            {title:'1'},
+            {title:'daf'},
+            {title:'xafea1'},
+            {title:'asdfawef1'},
         ]
         res.send(JSON.stringify(data));
     });

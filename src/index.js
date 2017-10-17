@@ -62,12 +62,15 @@
 
             compiler(item.getAttribute('dp-data'),function(result){
                 var length = JSON.parse(result).length;
-                scope.set('item',JSON.parse(result));
+                scope.set('tem',JSON.parse(result));
 
                 for(let j=0;j<length;j++){
+                    scope.setItem();
+
                     compiler(html,function(result){
                         item.innerHTML += result;
                     });
+
                 }
             });
         }

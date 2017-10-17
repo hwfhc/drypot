@@ -2,7 +2,14 @@
 
 const fs = require('fs');
 const webpack = require('webpack');
+const config = require('./config.js');
 
-const config = require('./dev-config.js');
 
-config.forEach(item => webpack(item,() => console.log('over')));
+const [,,type] = process.argv;
+
+var mode;
+
+if(type === '--production') mode = config.production;
+else mode = config.develop
+
+mode.forEach(item => webpack(item,() => console.log('over')));

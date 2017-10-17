@@ -67,11 +67,21 @@
 /* 0 */
 /***/ (function(module, exports) {
 
-module.exports = { set,get,getChild,getItem };
+module.exports = {
+    set,
+    get,
+    getChild,
+    setItem,
+    getItem,
+
+    getItemChild
+};
 
 const scope = {
     ajax : 'asdfadsf',
-    demo : { test:123 }
+    demo : { test:123 },
+    tem: [],
+    item: {}
 }
 
 function set(ident = undefined,value){
@@ -83,12 +93,19 @@ function get(ident){
 }
 
 function getItem(ident){
-    var data = scope[ident].splice(0,1);
-    return data[0];
+    return scope.item;
 }
 
 function getChild(ident,child){
     return scope[ident][child];
+}
+
+function getItemChild(child){
+    return scope.item[child];
+}
+
+function setItem(){
+    scope.item = scope['tem'].splice(0,1)[0];
 }
 
 
@@ -160,12 +177,15 @@ function getChild(ident,child){
 
             compiler(item.getAttribute('dp-data'),function(result){
                 var length = JSON.parse(result).length;
-                scope.set('item',JSON.parse(result));
+                scope.set('tem',JSON.parse(result));
 
                 for(let j=0;j<length;j++){
+                    scope.setItem();
+
                     compiler(html,function(result){
                         item.innerHTML += result;
                     });
+
                 }
             });
         }
@@ -213,6 +233,8 @@ function interpretDynamicHtml(code,callback){
     var arr = input.html;
     var promiseArr = [];
 
+    var kw = 'item';
+
     for(let i=0;i<arr.length;i++){
         var promise = new Promise(function(resolve, reject) {
             interpret(arr[i],function(result){
@@ -235,7 +257,7 @@ function interpretDynamicHtml(code,callback){
     function interpret(input,callback){
         if(input.value === 'item' && input.type === 'var')
         {
-            callback(scope.getItem('item'));
+            callback(scope.getItem());
             return;
         }
         if(is_text(input)) callback(input.value);
@@ -253,9 +275,7 @@ function interpretDynamicHtml(code,callback){
         for(let i=0;i<input.arguments.length;i++){
             arg[i] = input.arguments[i];
             var promise = new Promise(function(resolve, reject) {
-                interpret(arg[i],function(result){
-                    arg[i] = result;
-                    resolve();
+                interpret(arg[i],function(result){ arg[i] = result; resolve();
                 });
             });
             promiseArr.push(promise);
@@ -293,6 +313,7 @@ function interpretDynamicHtml(code,callback){
         return scope.get(input.value);
     }
     function interpret_dot(input){
+        if(input.value === 'item') return scope.getItemChild(input.arrow.value);
         return scope.getChild(input.value,input.arrow.value);
     }
     function interpret_num(input){
@@ -309,7 +330,8 @@ function interpretDynamicHtml(code,callback){
         return input.type === 'call';
     }
     function is_var(input){
-        return input.type === 'var';
+        return input.type === 'var'&&
+            input.value != 'item';
     }
     function is_dot(input){
         return input.type === 'dot';
