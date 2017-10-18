@@ -11,7 +11,8 @@ function initRoutes(app,directory){
     app.get('/test',function(req,res){
         var data = {
             first: 'first',
-            two: 'two'
+            two: 'two',
+            bool: false
         };
         res.send(JSON.stringify(data));
     });
