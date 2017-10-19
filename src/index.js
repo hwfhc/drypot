@@ -79,15 +79,14 @@
     })();
 
     (function initIf(){
-        var element = dp_for;
+        var element = dp_if;
 
         for(let i=0;i<element.length;i++){
             let item = element[i];
             let bool = item.getAttribute('dp-var');
 
-            compiler(bool,function(result){
-                console.log(result);
-                if(!result) item.style.display = 'none';
+            compiler(bool,result => {
+                if(result === 'false') element[i].style.display = 'none';
             });
         }
     })();

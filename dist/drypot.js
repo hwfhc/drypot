@@ -78,8 +78,9 @@ module.exports = {
 };
 
 const scope = {
-    ajax : 'asdfadsf',
-    demo : { test:123 },
+    ajax: 'asdfadsf',
+    demo: { test:123 },
+    bool: false,//here is a bug, the result of {{bool}} is 'false',a string.
     tem: [],
     item: {}
 }
@@ -121,6 +122,7 @@ function setItem(){
     const dp_dynamic = document.getElementsByClassName('dp-dynamic');
     const dp_item = document.getElementsByClassName('dp-item');
     const dp_for = document.getElementsByClassName('dp-for');
+    const dp_if = document.getElementsByClassName('dp-if');
 
     (function initComponent(){
         for(var i=0;i<dp_component.length;i++){
@@ -172,10 +174,11 @@ function setItem(){
             let item = element[i];
             let html = item.innerHTML;
             let name = item.getAttribute('dp-name');
+            let data = item.getAttribute('dp-data');
 
             item.innerHTML = '';
 
-            compiler(item.getAttribute('dp-data'),function(result){
+            compiler(data,function(result){
                 var length = JSON.parse(result).length;
                 scope.set('tem',JSON.parse(result));
 
@@ -190,6 +193,20 @@ function setItem(){
             });
         }
     })();
+
+    (function initIf(){
+        var element = dp_if;
+
+        for(let i=0;i<element.length;i++){
+            let item = element[i];
+            let bool = item.getAttribute('dp-var');
+
+            compiler(bool,result => {
+                if(result === 'false') element[i].style.display = 'none';
+            });
+        }
+    })();
+
 
     function getDataWithAJAX(method,url,element,callback) {
         var xhttp = new XMLHttpRequest();

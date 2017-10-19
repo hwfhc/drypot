@@ -12,7 +12,7 @@ function initRoutes(app,directory){
         var data = {
             first: 'first',
             two: 'two',
-            bool: false
+            bool: true
         };
         res.send(JSON.stringify(data));
     });
