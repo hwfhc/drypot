@@ -1,8 +1,8 @@
 module.exports = initRoutes;
 
 function initRoutes(app,directory){
-    app.get('/',function(req,res){
-        res.redirect('/home/1/test');
+    app.get('/page/:page',function(req,res){
+        res.sendFile(`${directory}/views/${req.params['page']}.html`);
     });
     app.get('/home/:id/test',function(req,res){
         res.sendFile(directory + '/views/index.html');

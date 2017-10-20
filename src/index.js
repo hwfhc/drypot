@@ -4,7 +4,6 @@
 
     const dp_component = document.getElementsByClassName('dp-component');
     const dp_dynamic = document.getElementsByClassName('dp-dynamic');
-    const dp_item = document.getElementsByClassName('dp-item');
     const dp_for = document.getElementsByClassName('dp-for');
     const dp_if = document.getElementsByClassName('dp-if');
 
@@ -25,31 +24,24 @@
 
         for(let i=0;i<element.length;i++){
             let innerHTML = element[i].innerHTML;
-
-            compiler(innerHTML,function(result){
-                element[i].innerHTML = result;
-            });
-        }
-    })();
-
-    (function initItem(){
-        var element = dp_item;
-
-        for(let i=0;i<element.length;i++){
-            let innerHTML = element[i].innerHTML;
             let name = element[i].getAttribute('dp-name');
+            let data = element[i].getAttribute('dp-data');
 
-            compiler(element[i].getAttribute('dp-data'),function(result){
-                scope.set(name,JSON.parse(result));
+            if(data){
+                compiler(data,function(result){
+                    scope.set(name,JSON.parse(result));
 
+                    compiler(innerHTML,function(result){
+                        element[i].innerHTML = result;
+                    });
+                });
+            }else{
                 compiler(innerHTML,function(result){
                     element[i].innerHTML = result;
                 });
-            });
+            }
         }
     })();
-
-
 
     (function initFor(){
         var element = dp_for;

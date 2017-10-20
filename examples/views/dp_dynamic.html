@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>IP-graph</title>
+    </head>
+
+    <style>
+    </style>
+
+    <body>
+        <p class="dp-dynamic">{{ajax (`/user/${getPathname(2)}/username`)}}</p>
+
+        <div class="dp-dynamic" dp-name="test" dp-data="{{ajax(`/test`)}}">
+            <p>{{test.first}}</p>
+            <p>{{test.two}}</p>
+        </div>
+
+
+    </body>
+
+    <script src="/drypot.min.js" charset="utf-8"></script>
+
+</html>
