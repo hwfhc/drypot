@@ -11,11 +11,13 @@
     </style>
 
     <body>
-        <p class="dp-dynamic">{{ajax (`/user/${getPathname(2)}/username`)}}</p>
+        <p class="dp-dynamic">
+        my name is {{ajax(`/dp_dynamic/${getPathname(2)}/username`)}}
+        </p>
 
-        <div class="dp-dynamic" dp-name="test" dp-data="{{ajax(`/test`)}}">
-            <p>{{test.first}}</p>
-            <p>{{test.two}}</p>
+        <div class="dp-dynamic" dp-name="data" dp-data="{{ajax(`/dp_dynamic/data`)}}">
+            <p>{{data.first}}</p>
+            <p>{{data.last}}</p>
         </div>
 
 

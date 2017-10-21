@@ -11,16 +11,19 @@
     </style>
 
     <body>
-        <div class="dp-for" dp-data="{{ajax(`/render`)}}">
-            <p>{{item}}</p>
-        </div>
+        <ul class="dp-for" dp-data="{{ajax(`/dp_for/1`)}}">
+            <li>{{item}}</li>
+        </ul>
 
-        <div class="dp-for" dp-data="{{ajax(`/first`)}}">
-            <p>{{item.title}}</p>
+        <div class="dp-for" dp-data="{{ajax(`/dp_for/2`)}}">
+            <p>
+            <h3>{{item.title}}: </h3>
+            {{item.description}}
+            </p>
         </div>
 
         <!--new feature-->
-        <p class="dp-for" dp-data="{{ajax(`/first`)}}">{{item.title}}</p>
+        <p class="dp-for" dp-data="{{}}">{{item.title}}</p>
     </body>
 
     <script src="/drypot.min.js" charset="utf-8"></script>
