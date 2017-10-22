@@ -20,24 +20,29 @@
     })();
 
     (function initDynamic(){
-        var element = dp_dynamic;
+        var elements = dp_dynamic;
 
-        for(let i=0;i<element.length;i++){
-            let innerHTML = element[i].innerHTML;
-            let name = element[i].getAttribute('dp-name');
-            let data = element[i].getAttribute('dp-data');
+        for(let i=0;i<elements.length;i++){
+            let innerHTML = elements[i].innerHTML;
+            let name = elements[i].getAttribute('dp-name');
+            let data = elements[i].getAttribute('dp-data');
 
             if(data){
-                compiler(data,function(result){
-                    scope.set(name,JSON.parse(result));
+                new Promise((resolve,reject) => {
 
-                    compiler(innerHTML,function(result){
-                        element[i].innerHTML = result;
-                    });
-                });
+                    compiler(data,result => {
+                        scope.set(name,JSON.parse(result));
+                        resolve(result);
+                    })
+
+                }).then(result =>
+                    compiler(innerHTML,result =>{
+                        elements[i].innerHTML = result;
+                    })
+                );
             }else{
-                compiler(innerHTML,function(result){
-                    element[i].innerHTML = result;
+                compiler(innerHTML,result => {
+                    elements[i].innerHTML = result;
                 });
             }
         }
@@ -54,17 +59,23 @@
 
             item.innerHTML = '';
 
-            compiler(data,function(result){
+            new Promise((resolve,reject) => {
+                compiler(data,result => {
+                    scope.set('tem',JSON.parse(result));
+
+                    resolve(result);
+                });
+
+            }).then(result => {
+
                 var length = JSON.parse(result).length;
-                scope.set('tem',JSON.parse(result));
 
                 for(let j=0;j<length;j++){
                     scope.setItem();
 
-                    compiler(html,function(result){
+                    compiler(html,result => {
                         item.innerHTML += result;
                     });
-
                 }
             });
         }

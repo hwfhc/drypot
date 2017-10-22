@@ -9,8 +9,6 @@ module.exports = {
 };
 
 const scope = {
-    ajax: 'asdfadsf',
-    demo: { test:123 },
     bool: false,//here is a bug, the result of {{bool}} is 'false',a string.
     tem: [],
     item: {}

@@ -10,8 +10,8 @@
     </style>
 
     <body>
-        <!--here is a bug, i can not get data from server-->
-        <p class="dp-if" dp-var="{{bool}}">should not display</p>
+        <p class="dp-if" dp-var="{{ajax(`/dp_if/true`)}}">should be displayed</p>
+        <p class="dp-if" dp-var="{{ajax(`/dp_if/false`)}}">should not be displayed</p>
     </body>
 
     <script src="/drypot.min.js" charset="utf-8"></script>

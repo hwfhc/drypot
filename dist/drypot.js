@@ -78,8 +78,6 @@ module.exports = {
 };
 
 const scope = {
-    ajax: 'asdfadsf',
-    demo: { test:123 },
     bool: false,//here is a bug, the result of {{bool}} is 'false',a string.
     tem: [],
     item: {}
@@ -120,7 +118,6 @@ function setItem(){
 
     const dp_component = document.getElementsByClassName('dp-component');
     const dp_dynamic = document.getElementsByClassName('dp-dynamic');
-    const dp_item = document.getElementsByClassName('dp-item');
     const dp_for = document.getElementsByClassName('dp-for');
     const dp_if = document.getElementsByClassName('dp-if');
 
@@ -137,35 +134,33 @@ function setItem(){
     })();
 
     (function initDynamic(){
-        var element = dp_dynamic;
+        var elements = dp_dynamic;
 
-        for(let i=0;i<element.length;i++){
-            let innerHTML = element[i].innerHTML;
+        for(let i=0;i<elements.length;i++){
+            let innerHTML = elements[i].innerHTML;
+            let name = elements[i].getAttribute('dp-name');
+            let data = elements[i].getAttribute('dp-data');
 
-            compiler(innerHTML,function(result){
-                element[i].innerHTML = result;
-            });
-        }
-    })();
+            if(data){
+                new Promise((resolve,reject) => {
 
-    (function initItem(){
-        var element = dp_item;
+                    compiler(data,result => {
+                        scope.set(name,JSON.parse(result));
+                        resolve(result);
+                    })
 
-        for(let i=0;i<element.length;i++){
-            let innerHTML = element[i].innerHTML;
-            let name = element[i].getAttribute('dp-name');
-
-            compiler(element[i].getAttribute('dp-data'),function(result){
-                scope.set(name,JSON.parse(result));
-
-                compiler(innerHTML,function(result){
-                    element[i].innerHTML = result;
+                }).then(result =>
+                    compiler(innerHTML,result =>{
+                        elements[i].innerHTML = result;
+                    })
+                );
+            }else{
+                compiler(innerHTML,result => {
+                    elements[i].innerHTML = result;
                 });
-            });
+            }
         }
     })();
-
-
 
     (function initFor(){
         var element = dp_for;
@@ -178,17 +173,23 @@ function setItem(){
 
             item.innerHTML = '';
 
-            compiler(data,function(result){
+            new Promise((resolve,reject) => {
+                compiler(data,result => {
+                    scope.set('tem',JSON.parse(result));
+
+                    resolve(result);
+                });
+
+            }).then(result => {
+
                 var length = JSON.parse(result).length;
-                scope.set('tem',JSON.parse(result));
 
                 for(let j=0;j<length;j++){
                     scope.setItem();
 
-                    compiler(html,function(result){
+                    compiler(html,result => {
                         item.innerHTML += result;
                     });
-
                 }
             });
         }
