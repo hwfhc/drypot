@@ -166,14 +166,16 @@ function setItem(){
         var element = dp_for;
 
         for(let i=0;i<element.length;i++){
+            let parent = element[i].parentNode;
             let item = element[i];
             let html = item.innerHTML;
-            let name = item.getAttribute('dp-name');
             let data = item.getAttribute('dp-data');
 
-            item.innerHTML = '';
+            parent.removeChild(item);
+            i--;
 
             new Promise((resolve,reject) => {
+                console.log(element.length);
                 compiler(data,result => {
                     scope.set('tem',JSON.parse(result));
 
@@ -188,7 +190,10 @@ function setItem(){
                     scope.setItem();
 
                     compiler(html,result => {
-                        item.innerHTML += result;
+                        let child = item.cloneNode(true);
+                        child.innerHTML = result;
+
+                        parent.appendChild(child);
                     });
                 }
             });
