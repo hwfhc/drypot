@@ -8,10 +8,11 @@
     const dp_if = document.getElementsByClassName('dp-if');
 
     (function initComponent(){
-        for(var i=0;i<dp_component.length;i++){
+        var elements = dp_component;
+
+        for(var i=0;i<elements.length;i++){
             let name = dp_component[i].tagName.toLowerCase();
 
-            // I can add a module to manage ajax request, and there is just one ajax request to the same resources at the same time
             getDataWithAJAX('GET',`/components/${name}`,dp_component[i],function(data,component){
                 data += `<link href="/components/${name}/index.css" rel="stylesheet" type="text/css" />`;
                 component.innerHTML = data;
@@ -23,47 +24,49 @@
         var elements = dp_dynamic;
 
         for(let i=0;i<elements.length;i++){
-            let innerHTML = elements[i].innerHTML;
+            let node = elements[i];
+            let html = elements[i].innerHTML;
             let name = elements[i].getAttribute('dp-name');
             let data = elements[i].getAttribute('dp-data');
 
             if(data){
                 new Promise((resolve,reject) => {
-
                     compiler(data,result => {
                         scope.set(name,JSON.parse(result));
                         resolve(result);
                     })
 
                 }).then(result =>
-                    compiler(innerHTML,result =>{
-                        elements[i].innerHTML = result;
+                    compiler(html,result =>{
+                        removeTag(node);
+                        node.innerHTML = result;
                     })
                 );
             }else{
-                compiler(innerHTML,result => {
-                    elements[i].innerHTML = result;
+                compiler(html,result => {
+                    removeTag(node);
+                    node.innerHTML = result;
                 });
             }
         }
     })();
 
     (function initFor(){
-        var element = dp_for;
+        var elements = dp_for;
 
-        for(let i=0;i<element.length;i++){
-            let parent = element[i].parentNode;
-            let item = element[i];
-            let html = item.innerHTML;
-            let data = item.getAttribute('dp-data');
+        for(let i=0;i<elements.length;i++){
+            let parent = elements[i].parentNode;
+            let node = elements[i];
+            let html = node.innerHTML;
+            let data = node.getAttribute('dp-data');
 
-            parent.removeChild(item);
+            parent.removeChild(node);
             i--;
 
             new Promise((resolve,reject) => {
-                console.log(element.length);
                 compiler(data,result => {
                     scope.set('tem',JSON.parse(result));
+                    removeTag(node);
 
                     resolve(result);
                 });
@@ -76,7 +79,7 @@
                     scope.setItem();
 
                     compiler(html,result => {
-                        let child = item.cloneNode(true);
+                        let child = node.cloneNode(true);
                         child.innerHTML = result;
 
                         parent.appendChild(child);
@@ -87,18 +90,24 @@
     })();
 
     (function initIf(){
-        var element = dp_if;
+        var elements = dp_if;
 
-        for(let i=0;i<element.length;i++){
-            let item = element[i];
-            let bool = item.getAttribute('dp-var');
+        for(let i=0;i<elements.length;i++){
+            let node = elements[i];
+            let bool = node.getAttribute('dp-var');
 
             compiler(bool,result => {
-                if(result === 'false') element[i].style.display = 'none';
+                if(result === 'false')
+                    node.parentNode.removeChild(node);
             });
         }
     })();
 
+    function removeTag(item){
+        item.removeAttribute('dp-name');
+        item.removeAttribute('dp-data');
+        item.removeAttribute('dp-var');
+    }
 
     function getDataWithAJAX(method,url,element,callback) {
         var xhttp = new XMLHttpRequest();
