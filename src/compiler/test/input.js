@@ -1,5 +1,4 @@
 const expect = require('chai').expect;
-
 const input = require('../lib/input')('abc');
 
 describe('input',function(){
