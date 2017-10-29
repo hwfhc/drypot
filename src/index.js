@@ -56,6 +56,7 @@
 
         for(let i=0;i<elements.length;i++){
             let parent = elements[i].parentNode;
+            let last = elements[i].nextSibling;
             let node = elements[i];
             let html = node.innerHTML;
             let data = node.getAttribute('dp-data');
@@ -82,7 +83,7 @@
                         let child = node.cloneNode(true);
                         child.innerHTML = result;
 
-                        parent.appendChild(child);
+                        parent.insertBefore(child,last);
                     });
                 }
             });
