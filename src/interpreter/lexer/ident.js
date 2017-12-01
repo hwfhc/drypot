@@ -6,8 +6,6 @@ class Ident extends Token{
     }
 }
 
-Ident.MATCH = function(ch){
-    return /[a-z_]/i.test(ch);
-}
+Ident.MATCH = /^[a-zA-Z_]+/;
 
 module.exports = Ident;

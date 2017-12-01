@@ -1,19 +1,14 @@
-const Ident = require('./token/ident');
-const Sep = require('./token/sep');
-const Num = require('./token/num');
+const Ident = require('../lexer/ident');
+const Sep = require('../lexer/sep');
+const Num = require('../lexer/num');
 
 class AST{
     constructor(type){
         this.type = type;
         this.children = [];
-
-        this.isOK = true;
     }
 
     addChild(child){
-        if(child === "bug!"){
-            this.isOK = false;
-        }
         this.children.push(child);
     }
 
@@ -28,18 +23,16 @@ class Or{
     }
 
     match(tokenStream){
-        var ast;
+        var ast = new Error('not match in ',this);
 
         this.branch.forEach(item => {
-            ast = new AST();
-
             var rollbackPoint = tokenStream.createRollbackPoint();
             var result =  item.match(tokenStream);
 
-            if(!result.isOK)
+            if(isError(result))
                 tokenStream.rollback(rollbackPoint);
             else
-                ast.addChild(result);
+                ast = result;
         });
 
         return ast;
@@ -75,7 +68,12 @@ class Rule{
         var ast = new AST(this.tag);
 
         list.forEach(item => {
-            ast.addChild(item.match(tokenStream));
+            var result = item.match(tokenStream)
+
+            if(!isError(result))
+                ast.addChild(result);
+            else
+                ast = result;
         });
 
         return ast;
@@ -85,6 +83,10 @@ class Rule{
 
 function isInstance(sup,obj){
     return obj.__proto__ === sup.prototype;
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
 }
 
 module.exports = function(arg){

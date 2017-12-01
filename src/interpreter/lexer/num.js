@@ -6,8 +6,6 @@ class Num extends Token{
     }
 }
 
-Num.MATCH = function(ch){
-    return /[0-9]/i.test(ch);
-}
+Num.MATCH = /^[0-9]+/;
 
 module.exports = Num;

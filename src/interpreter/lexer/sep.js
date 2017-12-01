@@ -6,8 +6,6 @@ class Sep extends Token{
     }
 }
 
-Sep.MATCH = function(ch){
-    return ",;(){}.".indexOf(ch) >= 0;
-}
+Sep.MATCH = /^({{|}}|\(|\)|,)/;
 
 module.exports = Sep;

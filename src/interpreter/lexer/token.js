@@ -1,8 +1,6 @@
 class Token{
     constructor(value){
         this.value = value;
-        this.isOK = true;
-        // use to judge match is ok in or
     }
 
     match(tokenStream){
@@ -10,18 +8,16 @@ class Token{
 
         if(isSameToken(this,tok)){
             tokenStream.next();
-            return this;
+            return tok;
         }else{
-            return "bug!";
+            return new Error('not match in ',this);
         }
 
     }
 }
-var a = 0;
 
 function isSameToken(tok1,tok2){
-    if((tok1.value == tok2.value) &&
-        (tok1.__proto__ === tok2.__proto__))
+    if(tok1.__proto__ === tok2.__proto__)
         return true;
     else
         return false;
