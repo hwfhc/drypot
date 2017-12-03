@@ -1,79 +1,11 @@
 const Ident = require('../lexer/ident');
-const Sep = require('../lexer/sep');
+const Punc = require('../lexer/punc');
 const Num = require('../lexer/num');
 
-class AST{
-    constructor(type){
-        this.type = type;
-        this.children = [];
-    }
+const AST = require('./ast');
+const Repeat = require('./repeat');
+const Or = require('./or');
 
-    addChild(child){
-        this.children.push(child);
-    }
-}
-
-class Or{
-    constructor(branch){
-        this.branch = branch;
-    }
-
-    match(tokenStream){
-        var ast = new Error('not match in ',this);
-
-        this.branch.forEach(item => {
-            var rollbackPoint = tokenStream.createRollbackPoint();
-            var result =  item.match(tokenStream);
-
-            if(isError(result))
-                tokenStream.rollback(rollbackPoint);
-            else
-                ast = result;
-        });
-
-        return ast;
-    }
-}
-
-class Repeat{
-    constructor(list){
-        this.list = list;
-    }
-
-    match(tokenStream){
-        var astArr = [];
-        var list = this.list;
-
-        while(1){
-            var result = matchOnce();
-
-            if(result)
-                insertAtLastOfArr(astArr,result);
-            else
-                break;
-        }
-
-        return astArr;
-
-        function matchOnce(){
-            var rollbackPoint = tokenStream.createRollbackPoint();
-            var arrOfResult = [];
-
-            for(var i=0;i<list.length;i++){
-                var result =  list[i].match(tokenStream);
-
-                if(isError(result)){
-                    tokenStream.rollback(rollbackPoint);
-                    return false;
-                }else{
-                    arrOfResult.push(result);
-                }
-            }
-
-            return arrOfResult;
-        }
-    }
-}
 
 class Rule{
     constructor(tag){
@@ -87,8 +19,8 @@ class Rule{
         return this;
     }
 
-    sep(str){
-        this.list.push(new Sep(str));
+    punc(str){
+        this.list.push(new Punc(str));
 
         return this;
     }
@@ -113,9 +45,9 @@ class Rule{
             var result = item.match(tokenStream);
 
             if(isAstOfRepeat(result))
-                result.forEach(item => ast.addChild(item));
+                result.forEach(item => addChildWithoutPunc(ast,item));
             else if(!isError(result))
-                ast.addChild(result);
+                addChildWithoutPunc(ast,result);
             else
                 ast = result;
         });
@@ -125,23 +57,22 @@ class Rule{
 
 }
 
-function isInstance(sup,obj){
-    return obj.__proto__ === sup.prototype;
+function addChildWithoutPunc(ast,item){
+    if(!isPunc(item))
+        ast.addChild(item);
 }
 
 function isError(obj){
     return obj.__proto__ === Error.prototype;
 }
 
+function isPunc(obj){
+    return obj.__proto__ === Punc.prototype;
+}
+
 function isAstOfRepeat(obj){
     return obj.__proto__ === Array.prototype;
 }
-
-function insertAtLastOfArr(main,arr){
-    for(var i=0;i<arr.length;i++)
-        main.push(arr[i]);
-}
-
 
 module.exports = function(arg){
     return new Rule(arg);

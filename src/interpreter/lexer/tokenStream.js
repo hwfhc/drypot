@@ -1,8 +1,8 @@
 const Num = require('./num');
 const Ident = require('./ident');
-const Sep = require('./sep');
+const Punc = require('./punc');
 
-const tokenList = [Num,Ident,Sep];
+const tokenList = [Num,Ident,Punc];
 
 class TokenStream{
     constructor(code){
