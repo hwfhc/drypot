@@ -1,3 +1,5 @@
+const ENV = require('./env/index');
+
 const rule = require('./parser/rule');
 const tokenStream = require('./lexer/tokenStream');
 
@@ -7,10 +9,30 @@ const Num = require('./lexer/num');
 
 var ident = new Ident();
 var num = new Num();
-var arg = rule('arg').or([ident,num]);
 
-var call = rule('call').ast(ident).punc('(').ast(arg).repeat([punc(','),arg]).punc(')');
-var stmt = rule('stmt').punc('{{').ast(call).punc('}}');
+var arg = rule('arg').or([ident,num]).setEval(
+    function (){
+        return this.getFirstChild().eval();
+    });
+
+var call = rule('call')
+    .ast(ident).punc('(').ast(arg).repeat([punc(','),arg]).punc(')')
+    .setEval(function (){
+        var func = this.getFirstChild().eval();
+        var args = [];
+
+        for(var i=1;i<this.getNumberOfChild();i++){
+            var item = this.getChild(i).eval();
+            args.push(this.getChild(i).eval());
+        }
+
+        return ENV.call(func,args);
+    });
+
+var stmt = rule('stmt').punc('{{').ast(call).punc('}}').setEval(
+    function (){
+        return this.getFirstChild().eval();
+    });
 
 
 function punc(value){
@@ -20,5 +42,7 @@ function punc(value){
 module.exports = function (code){
     var token = new tokenStream(code);
 
-    return stmt.match(token);
+    var ast =  stmt.match(token);
+
+    return ast.eval();
 }

@@ -10,6 +10,8 @@ const Or = require('./or');
 class Rule{
     constructor(tag){
         this.tag = tag;
+        this.eval;
+
         this.list = [];
     }
 
@@ -37,9 +39,15 @@ class Rule{
         return this;
     }
 
+    setEval(evaluate){
+        this.eval = evaluate;
+
+        return this;
+    }
+
     match(tokenStream){
         var list = this.list;
-        var ast = new AST(this.tag);
+        var ast = new AST(this.tag,this.eval);
 
         list.forEach(item => {
             var result = item.match(tokenStream);

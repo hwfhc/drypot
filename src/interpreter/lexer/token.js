@@ -14,6 +14,10 @@ class Token{
         }
 
     }
+
+    eval(){
+        return this.value;
+    }
 }
 
 function isSameToken(tok1,tok2){
