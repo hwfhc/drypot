@@ -1,6 +1,6 @@
 const exec = require('./spec')
 
-var ast = exec('{{test(value,1564,4156,ident)}}');
+var ast = exec('asd{{test(value,1564,4156,ident)}}');
 
 console.log(ast);
 /*console.log("");

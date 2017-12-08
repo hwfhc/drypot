@@ -6,6 +6,7 @@ const tokenStream = require('./lexer/tokenStream');
 const Ident = require('./lexer/ident');
 const Punc = require('./lexer/punc');
 const Num = require('./lexer/num');
+const Html = require('./lexer/html');
 
 var ident = new Ident();
 var num = new Num();
@@ -29,7 +30,7 @@ var call = rule('call')
         return ENV.call(func,args);
     });
 
-var stmt = rule('stmt').punc('{{').ast(call).punc('}}').setEval(
+var stmt = rule('stmt').maybe([ident]).punc('{{').ast(call).punc('}}').setEval(
     function (){
         return this.getFirstChild().eval();
     });

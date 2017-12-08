@@ -4,6 +4,7 @@ const Num = require('../lexer/num');
 
 const AST = require('./ast');
 const Repeat = require('./repeat');
+const Maybe = require('./maybe');
 const Or = require('./or');
 
 
@@ -35,6 +36,12 @@ class Rule{
 
     repeat(arg){
         this.list.push(new Repeat(arg));
+
+        return this;
+    }
+
+    maybe(arg){
+        this.list.push(new Maybe(arg));
 
         return this;
     }
