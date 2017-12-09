@@ -1,13 +1,19 @@
 const Num = require('./num');
 const Ident = require('./ident');
 const Punc = require('./punc');
+const Html = require('./html');
 
-const tokenList = [Num,Ident,Punc];
+const tokenList_outStr = [Num,Ident,Punc];
+const tokenList_inStr = [Html,Punc];
+
+var tokenList = tokenList_outStr;
 
 class TokenStream{
     constructor(code){
         this.index = -1;
         this.stream = scan(code);
+
+        this.inStr = false;
     }
 
     next(){
@@ -43,13 +49,28 @@ function scan(str){
             var item = tokenList[i];
             var result = str.match(item.MATCH);
 
+
             if(result){
+                if(isStrStart(result[0])){
+                    this.inStr = !this.inStr;
+
+                    if(this.inStr)
+                        tokenList = tokenList_inStr;
+                    else
+                        tokenList = tokenList_outStr;
+                }
+
                 str = str.substr(result[0].length);
                 return new item(result[0]);
             }
 
         }
     }
+}
+
+function isStrStart(char){
+    var a = (char === '`');
+    return a ;
 }
 
 module.exports = TokenStream;

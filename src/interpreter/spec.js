@@ -42,6 +42,7 @@ function punc(value){
 
 module.exports = function (code){
     var token = new tokenStream(code);
+    console.log(token.stream);
 
     var ast =  stmt.match(token);
 
