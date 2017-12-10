@@ -1,11 +1,11 @@
-const Token = require('./token');
+const Punc = require('./punc');
 
-class Quo extends Token{
+class Quo extends Punc{
     constructor(){
         super('`');
     }
 }
 
-Quo.MATCH = /^`+/;
+Quo.MATCH = /^(`)/;
 
 module.exports = Quo;

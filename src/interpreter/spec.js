@@ -10,8 +10,10 @@ const Html = require('./lexer/html');
 
 var ident = new Ident();
 var num = new Num();
+var html = new Html();
 
-var arg = rule('arg').or([ident,num]).setEval(
+var str = rule('str').quo('`').ast(html).quo('`')
+var arg = rule('arg').or([str,ident,num]).setEval(
     function (){
         return this.getFirstChild().eval();
     });
@@ -45,6 +47,11 @@ module.exports = function (code){
     console.log(token.stream);
 
     var ast =  stmt.match(token);
+    console.log(ast.children[2]);
+    console.log(ast.children[1].children[1].children[0]);
+    console.log(ast.children[1].children[2]);
+    console.log(ast.children[1].children[3]);
+    console.log(ast.children[1].children[4]);
 
     return ast.eval();
 }

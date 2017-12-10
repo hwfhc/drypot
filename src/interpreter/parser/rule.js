@@ -1,6 +1,7 @@
 const Ident = require('../lexer/ident');
 const Punc = require('../lexer/punc');
 const Num = require('../lexer/num');
+const Quo = require('../lexer/quo');
 
 const AST = require('./ast');
 const Repeat = require('./repeat');
@@ -24,6 +25,12 @@ class Rule{
 
     punc(str){
         this.list.push(new Punc(str));
+
+        return this;
+    }
+
+    quo(str){
+        this.list.push(new Quo(str));
 
         return this;
     }
@@ -60,9 +67,9 @@ class Rule{
             var result = item.match(tokenStream);
 
             if(isAstOfRepeat(result))
-                result.forEach(item => addChildWithoutPunc(ast,item));
+                result.forEach(item => addChildWithoutPuncAndQuo(ast,item));
             else if(!isError(result))
-                addChildWithoutPunc(ast,result);
+                addChildWithoutPuncAndQuo(ast,result);
             else
                 ast = result;
         });
@@ -72,8 +79,8 @@ class Rule{
 
 }
 
-function addChildWithoutPunc(ast,item){
-    if(!isPunc(item))
+function addChildWithoutPuncAndQuo(ast,item){
+    if(!isPunc(item) && !isQuo(item))
         ast.addChild(item);
 }
 
@@ -83,6 +90,10 @@ function isError(obj){
 
 function isPunc(obj){
     return obj.__proto__ === Punc.prototype;
+}
+
+function isQuo(obj){
+    return obj.__proto__ === Quo.prototype;
 }
 
 function isAstOfRepeat(obj){

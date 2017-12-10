@@ -2,9 +2,10 @@ const Num = require('./num');
 const Ident = require('./ident');
 const Punc = require('./punc');
 const Html = require('./html');
+const Quo = require('./quo');
 
-const tokenList_outStr = [Num,Ident,Punc];
-const tokenList_inStr = [Html,Punc];
+const tokenList_outStr = [Num,Ident,Quo,Punc];
+const tokenList_inStr = [Html,Quo];
 
 var tokenList = tokenList_outStr;
 
@@ -50,22 +51,23 @@ function scan(str){
             var result = str.match(item.MATCH);
 
 
-            if(result){
-                if(isStrStart(result[0])){
-                    this.inStr = !this.inStr;
+            if(!result)
+                continue;
 
-                    if(this.inStr)
-                        tokenList = tokenList_inStr;
-                    else
-                        tokenList = tokenList_outStr;
-                }
+            if(isStrStart(result[0]))
+                switchInOutStr();
 
-                str = str.substr(result[0].length);
-                return new item(result[0]);
-            }
-
+            str = str.substr(result[0].length);
+            return new item(result[0]);
         }
     }
+}
+
+function switchInOutStr(){
+    if(tokenList === tokenList_outStr)
+        tokenList = tokenList_inStr;
+    else
+        tokenList = tokenList_outStr;
 }
 
 function isStrStart(char){
