@@ -14,6 +14,10 @@ class AST{
         return this.children[index];
     }
 
+    getChildren(){
+        return this.children
+    }
+
     getFirstChild(){
         return this.children[0];
     }

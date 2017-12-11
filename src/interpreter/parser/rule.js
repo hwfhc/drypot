@@ -2,6 +2,7 @@ const Ident = require('../lexer/ident');
 const Punc = require('../lexer/punc');
 const Num = require('../lexer/num');
 const Quo = require('../lexer/quo');
+const Sep = require('../lexer/sep');
 
 const AST = require('./ast');
 const Repeat = require('./repeat');
@@ -23,14 +24,8 @@ class Rule{
         return this;
     }
 
-    punc(str){
-        this.list.push(new Punc(str));
-
-        return this;
-    }
-
-    quo(str){
-        this.list.push(new Quo(str));
+    sep(str){
+        this.list.push(new Sep(str));
 
         return this;
     }
