@@ -6,6 +6,6 @@ class Punc extends Sep{
     }
 }
 
-Sep.MATCH = /^({{|}}|\(|\)|,)/;
+Sep.MATCH = /^({{|}}|\(|\)|,|.)/;
 
 module.exports = Punc;

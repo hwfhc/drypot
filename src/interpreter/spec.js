@@ -13,12 +13,25 @@ var ident = new Ident();
 var num = new Num();
 var html = new Html();
 
+var dot = rule('dot').ast(ident).repeat([sep('.'),ident]).setEval(
+    function (){
+        var str = '';
+
+        for(var i=1;i<this.getNumberOfChild();i++){
+            var item = this.getChild(i).eval();
+            str += item;
+        }
+
+        return str;
+    }
+);
+
 var str = rule('str').sep('`').ast(html).sep('`').setEval(
     function(){
         return this.getFirstChild().eval();
     }
 );
-var arg = rule('arg').or([str,ident,num]).setEval(
+var arg = rule('arg').or([str,dot,num]).setEval(
     function (){
         return this.getFirstChild().eval();
     }
@@ -66,6 +79,7 @@ module.exports = function (code){
     console.log(ast.children[1].children[2]);
     console.log(ast.children[1].children[3]);
     console.log(ast.children[1].children[4]);
+    console.log(ast.children[1].children[4].children[0]);
 
     return ast.eval();
 }

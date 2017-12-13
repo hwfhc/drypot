@@ -18,7 +18,7 @@ class Sep extends Token{
     }
 }
 
-Sep.MATCH = /^({{|}}|\(|\)|,)/;
+Sep.MATCH = /^({{|}}|\(|\)|,|.)/;
 
 function isValueEqual(tok1,tok2){
     return tok1.value === tok2.value;

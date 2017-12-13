@@ -1,4 +1,8 @@
 class Repeat{
+    /*
+     * repeat 0 time or more time
+     *
+     */
     constructor(list){
         this.list = list;
     }
