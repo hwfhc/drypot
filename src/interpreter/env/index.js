@@ -1,3 +1,14 @@
+const fs = require('fs');
+
+const readFile = function (fileName) {
+    return new Promise(function (resolve, reject) {
+        fs.readFile(fileName,'utf8', function(error, data) {
+            if (error) return reject(error);
+            resolve(data);
+        });
+    });
+};
+
 module.exports = {
     call
 };
@@ -23,16 +34,12 @@ funcPool.ajax = function (url,callback){
     xmlhttp.send();
 }
 
-funcPool.test = function (arg){
-    var str = '';
+funcPool.read = async function (arg){
+    var str = await readFile('./test');
 
-    for(var i=0;i<arg.length;i++){
-        str += arg[i];
-    }
 
     return str;
 }
-
 
 function call(func,arg,callback){
     //arg.push(callback);

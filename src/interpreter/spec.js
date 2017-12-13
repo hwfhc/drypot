@@ -37,9 +37,8 @@ var arg = rule('arg').or([str,dot,num]).setEval(
     }
 );
 
-var call = rule('call')
-    .ast(ident).sep('(').ast(arg).repeat([sep(','),arg]).sep(')')
-    .setEval(function (){
+var call = rule('call').ast(ident).sep('(').ast(arg).repeat([sep(','),arg]).sep(')').setEval(
+    function (){
         var func = this.getFirstChild().eval();
         var args = [];
 
@@ -48,17 +47,19 @@ var call = rule('call')
             args.push(this.getChild(i).eval());
         }
 
+
         return ENV.call(func,args);
     }
-    );
+);
 
+// stmt : (html) '{{' call '}}' (html)
 var stmt = rule('stmt').maybe([ident]).sep('{{').ast(call).sep('}}').setEval(
-    function (){
+    async function (){
         var str = '';
 
-        this.getChildren().forEach(item => {
-            str += item.eval();
-        });
+        for(var i=0;i<this.getChildren().length;i++){
+            str += await this.getChildren()[i].eval();
+        }
 
         return str;
     }
@@ -69,17 +70,18 @@ function sep(value){
     return new Sep(value);
 }
 
-module.exports = function (code){
+module.exports = async function (code,callback){
     var token = new tokenStream(code);
-    console.log(token.stream);
+    //console.log(token.stream);
 
     var ast =  stmt.match(token);
-    console.log(ast.children[1]);
+    /*console.log(ast.children[1]);
     console.log(ast.children[1].children[1].children[0]);
     console.log(ast.children[1].children[2]);
     console.log(ast.children[1].children[3]);
     console.log(ast.children[1].children[4]);
     console.log(ast.children[1].children[4].children[0]);
+    */
 
-    return ast.eval();
+    callback(await ast.eval());
 }
