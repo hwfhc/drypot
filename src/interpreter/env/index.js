@@ -1,13 +1,4 @@
-const fs = require('fs');
-
-const readFile = function (fileName) {
-    return new Promise(function (resolve, reject) {
-        fs.readFile(fileName,'utf8', function(error, data) {
-            if (error) return reject(error);
-            resolve(data);
-        });
-    });
-};
+const scope = require('./scope');
 
 module.exports = {
     call
@@ -32,13 +23,6 @@ funcPool.ajax = function (url,callback){
 
     xmlhttp.open("GET",url,true);
     xmlhttp.send();
-}
-
-funcPool.read = async function (arg){
-    var str = await readFile('./test');
-
-
-    return str;
 }
 
 function call(func,arg,callback){

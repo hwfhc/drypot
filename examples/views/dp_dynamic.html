@@ -12,7 +12,8 @@
 
     <body>
         <p class="dp-dynamic">
-        my name is {{ajax(`/dp_dynamic/${getPathname(2)}/username`)}}
+        <!--my name is {{ajax(`/dp_dynamic/${getPathname(2)}/username`)}}-->
+        my name is {{ajax(`/dp_dynamic/1/username`)}}
         </p>
 
         <div class="dp-dynamic" dp-name="data" dp-data="{{ajax(`/dp_dynamic/data`)}}">

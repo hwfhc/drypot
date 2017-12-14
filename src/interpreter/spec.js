@@ -72,7 +72,7 @@ function sep(value){
 
 module.exports = async function (code,callback){
     var token = new tokenStream(code);
-    //console.log(token.stream);
+    console.log(token.stream);
 
     var ast =  stmt.match(token);
     /*console.log(ast.children[1]);

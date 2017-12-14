@@ -1,6 +1,6 @@
 (function (){
-    const compiler = require('./compiler');
-    const scope = require('./compiler/lib/scope');
+    const compiler = require('./interpreter/spec');
+    const scope = require('./interpreter/env/scope');
 
     const dp_component = document.getElementsByClassName('dp-component');
     const dp_dynamic = document.getElementsByClassName('dp-dynamic');
