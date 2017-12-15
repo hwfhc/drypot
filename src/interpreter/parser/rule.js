@@ -62,9 +62,9 @@ class Rule{
             var result = item.match(tokenStream);
 
             if(isAstOfRepeat(result))
-                result.forEach(item => addChildWithoutPuncAndQuo(ast,item));
+                result.forEach(item => addChildWithoutSep(ast,item));
             else if(!isError(result))
-                addChildWithoutPuncAndQuo(ast,result);
+                addChildWithoutSep(ast,result);
             else
                 ast = result;
         });
@@ -74,8 +74,8 @@ class Rule{
 
 }
 
-function addChildWithoutPuncAndQuo(ast,item){
-    if(!isPunc(item) && !isQuo(item))
+function addChildWithoutSep(ast,item){
+    if(!isSep(item))
         ast.addChild(item);
 }
 
@@ -83,12 +83,16 @@ function isError(obj){
     return obj.__proto__ === Error.prototype;
 }
 
-function isPunc(obj){
-    return obj.__proto__ === Punc.prototype;
-}
+function isSep(tok){
+    var tem = tok.__proto__;
 
-function isQuo(obj){
-    return obj.__proto__ === Quo.prototype;
+    while(tem){
+        if(tem.__proto__ === Sep.prototype)
+            return true;
+        tem = tem.__proto__
+    }
+
+    return false;
 }
 
 function isAstOfRepeat(obj){

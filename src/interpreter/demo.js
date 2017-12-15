@@ -1,5 +1,5 @@
 const exec = require('./spec')
 
-exec('asd{{read(file,`asdf`)}}', data => {
+exec('my name is {{ajax(`/dp_dynamic/1/username`)}}', data => {
     console.log(data);
 });

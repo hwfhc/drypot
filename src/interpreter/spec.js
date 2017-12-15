@@ -53,7 +53,7 @@ var call = rule('call').ast(ident).sep('(').ast(arg).repeat([sep(','),arg]).sep(
 );
 
 // stmt : (html) '{{' call '}}' (html)
-var stmt = rule('stmt').maybe([ident]).sep('{{').ast(call).sep('}}').setEval(
+var stmt = rule('stmt').maybe([html]).sep('{{').ast(call).sep('}}').setEval(
     async function (){
         var str = '';
 
@@ -75,6 +75,7 @@ module.exports = async function (code,callback){
     console.log(token.stream);
 
     var ast =  stmt.match(token);
+    console.log(ast);
     /*console.log(ast.children[1]);
     console.log(ast.children[1].children[1].children[0]);
     console.log(ast.children[1].children[2]);

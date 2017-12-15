@@ -12,13 +12,11 @@ class Sep extends Token{
             tokenStream.next();
             return tok;
         }else{
-            return new Error('not match in ',this);
+            return new Error(`not match in ${tok.value}`);
         }
 
     }
 }
-
-Sep.MATCH = /^({{|}}|\(|\)|,|.)/;
 
 function isValueEqual(tok1,tok2){
     return tok1.value === tok2.value;

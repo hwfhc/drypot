@@ -11,8 +11,10 @@ funcPool.getPathname = function(number,callback){
 }
 
 
-funcPool.ajax = function (url,callback){
-    var xmlhttp = new XMLHttpRequest();
+funcPool.ajax = async function (url,callback){
+    await url;
+    return url;
+    /*var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function()
     {
         if (xmlhttp.readyState==4 && xmlhttp.status==200)
@@ -22,8 +24,10 @@ funcPool.ajax = function (url,callback){
     }
 
     xmlhttp.open("GET",url,true);
-    xmlhttp.send();
+    xmlhttp.send();*/
 }
+
+
 
 function call(func,arg,callback){
     //arg.push(callback);

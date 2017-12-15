@@ -6,6 +6,6 @@ class Html extends Token{
     }
 }
 
-Html.MATCH = /^[a-zA-Z_0-9]+/;
+Html.MATCH = /^[^(`|{{|}})]+/;
 
 module.exports = Html;

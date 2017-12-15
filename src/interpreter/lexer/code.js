@@ -1,11 +1,11 @@
 const Sep = require('./sep');
 
-class Punc extends Sep{
+class Code extends Sep{
     constructor(value){
         super(value);
     }
 }
 
-Punc.MATCH = /^(\(|\)|,|\.)/;
+Code.MATCH = /^({{|}})/;
 
-module.exports = Punc;
+module.exports = Code;
