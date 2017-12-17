@@ -71,11 +71,19 @@ function sep(value){
 }
 
 module.exports = async function (code,callback){
-    var token = new tokenStream(code);
-    console.log(token.stream);
+    var ts = new tokenStream(code);
+
+    if(isError(ts)){
+        callback(ts);
+        return;
+    }
 
     var ast =  stmt.match(token);
-    console.log(ast);
+
+    if(isError(ast)){
+        callback(ast);
+        return;
+    }
     /*console.log(ast.children[1]);
     console.log(ast.children[1].children[1].children[0]);
     console.log(ast.children[1].children[2]);
@@ -84,5 +92,9 @@ module.exports = async function (code,callback){
     console.log(ast.children[1].children[4].children[0]);
     */
 
-    callback(await ast.eval());
+    callback(null,await ast.eval());
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
 }

@@ -5,16 +5,17 @@ class TokenStream{
         this.index = -1;
         this.stream = scan(code);
 
-        this.inStr = false;
+        if(isError(this.stream))
+            return this.stream;
     }
 
     next(){
-      this.index++;
-      return this.stream[this.index];
+        this.index++;
+        return this.stream[this.index];
     }
 
-    peek(){
-      return this.stream[this.index+1];
+    peek(i=1){
+      return this.stream[this.index+i];
     }
 
     createRollbackPoint(){
@@ -36,8 +37,7 @@ function scan(str){
         var result = getOneToken();
 
         if(!result){
-            console.error("Unexpected token");
-            break;
+            return new Error(`Unexpected token \'${str}\'`);
         }
 
         stream.push(result);
@@ -60,6 +60,10 @@ function scan(str){
         }
     }
 
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
 }
 
 

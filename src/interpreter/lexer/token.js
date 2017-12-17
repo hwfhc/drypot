@@ -10,7 +10,7 @@ class Token{
             tokenStream.next();
             return tok;
         }else{
-            return new Error(`not match in ${tok.value}`);
+            return new Error(`not match in ${tok.value}${tokenStream.peek(2).value}${tokenStream.peek(3).value}`);
         }
 
     }
