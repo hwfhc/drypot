@@ -78,19 +78,12 @@ module.exports = async function (code,callback){
         return;
     }
 
-    var ast =  stmt.match(token);
+    var ast =  stmt.match(ts);
 
     if(isError(ast)){
         callback(ast);
         return;
     }
-    /*console.log(ast.children[1]);
-    console.log(ast.children[1].children[1].children[0]);
-    console.log(ast.children[1].children[2]);
-    console.log(ast.children[1].children[3]);
-    console.log(ast.children[1].children[4]);
-    console.log(ast.children[1].children[4].children[0]);
-    */
 
     callback(null,await ast.eval());
 }
