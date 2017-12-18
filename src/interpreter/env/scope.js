@@ -9,9 +9,18 @@ module.exports = {
 };
 
 const scope = {
-    bool: false,//here is a bug, the result of {{bool}} is 'false',a string.
+    bool: '123',
     tem: [],
-    item: {}
+    item: {},
+    test: function (url){
+        return url;
+    },
+    ajax: async function (url){
+        return await sendReq(url);
+    },
+    getPathname: function(number,callback){
+        callback(window.location.pathname.split('/')[number]);
+    }
 }
 
 function set(ident = undefined,value){
@@ -36,4 +45,22 @@ function getItemChild(child){
 
 function setItem(){
     scope.item = scope['tem'].splice(0,1)[0];
+}
+
+function sendReq(url){
+    return new Promise((resolve,reject) => {
+
+        var xmlhttp = new XMLHttpRequest();
+
+        xmlhttp.onreadystatechange = function()
+        {
+            if (xmlhttp.readyState==4 && xmlhttp.status==200)
+            {
+                resolve(xmlhttp.responseText);
+            }
+        }
+
+        xmlhttp.open("GET",url,true);
+        xmlhttp.send();
+    });
 }

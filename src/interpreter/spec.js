@@ -1,4 +1,4 @@
-const ENV = require('./env/index');
+const ENV = require('./env');
 
 const rule = require('./parser/rule');
 const tokenStream = require('./lexer/tokenStream');
@@ -13,7 +13,7 @@ var ident = new Ident();
 var num = new Num();
 var html = new Html();
 
-var dot = rule('dot').ast(ident).repeat([sep('.'),ident]).setEval(
+/*var dot = rule('dot').ast(ident).repeat([sep('.'),ident]).setEval(
     function (){
         var str = '';
 
@@ -24,14 +24,14 @@ var dot = rule('dot').ast(ident).repeat([sep('.'),ident]).setEval(
 
         return str;
     }
-);
+);*/
 
 var str = rule('str').sep('`').ast(html).sep('`').setEval(
     function(){
         return this.getFirstChild().eval();
     }
 );
-var arg = rule('arg').or([str,dot,num]).setEval(
+var arg = rule('arg').or([str,ident,num]).setEval(
     function (){
         return this.getFirstChild().eval();
     }
@@ -46,7 +46,6 @@ var call = rule('call').ast(ident).sep('(').ast(arg).repeat([sep(','),arg]).sep(
             var item = this.getChild(i).eval();
             args.push(this.getChild(i).eval());
         }
-
 
         return ENV.call(func,args);
     }
