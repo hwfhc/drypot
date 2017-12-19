@@ -5,6 +5,8 @@ class Token{
 
     match(tokenStream){
         var tok = tokenStream.peek();
+        if(!tok)
+            return new Error(`no tok rest`);
 
         if(isSameToken(this,tok)){
             tokenStream.next();

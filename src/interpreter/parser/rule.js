@@ -58,7 +58,9 @@ class Rule{
         var list = this.list;
         var ast = new AST(this.tag,this.eval);
 
-        list.forEach(item => {
+        for(var i=0;i<list.length;i++){
+            var item = list[i];
+
             var result = item.match(tokenStream);
 
             if(isAstOfRepeat(result))
@@ -66,8 +68,9 @@ class Rule{
             else if(!isError(result))
                 addChildWithoutSep(ast,result);
             else
-                ast = result;
-        });
+                return result;
+        }
+
 
         return ast;
     }

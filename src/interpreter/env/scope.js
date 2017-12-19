@@ -4,6 +4,7 @@ module.exports = {
     getChild,
     setItem,
     getItem,
+    getTem,
 
     getItemChild
 };
@@ -12,9 +13,6 @@ const scope = {
     bool: '123',
     tem: [],
     item: {},
-    test: function (url){
-        return url;
-    },
     ajax: async function (url){
         return await sendReq(url);
     },
@@ -29,6 +27,11 @@ function set(ident = undefined,value){
 
 function get(ident){
     return scope[ident];
+}
+
+
+function getTem(){
+    return scope.tem;
 }
 
 function getItem(ident){
