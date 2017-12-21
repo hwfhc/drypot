@@ -1,5 +1,8 @@
 class Or{
     constructor(branch){
+        /*
+         * the first branch has the biggest priority
+         */
         this.branch = branch;
     }
 

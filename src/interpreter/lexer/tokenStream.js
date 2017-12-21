@@ -1,22 +1,21 @@
-const Num = require('./num');
-const Ident = require('./ident');
-const Punc = require('./punc');
-
-const tokenList = [Num,Ident,Punc];
+const Mode = require('./mode');
 
 class TokenStream{
     constructor(code){
         this.index = -1;
         this.stream = scan(code);
+
+        if(isError(this.stream))
+            return this.stream;
     }
 
     next(){
-      this.index++;
-      return this.stream[this.index];
+        this.index++;
+        return this.stream[this.index];
     }
 
-    peek(){
-      return this.stream[this.index+1];
+    peek(i=1){
+      return this.stream[this.index+i];
     }
 
     createRollbackPoint(){
@@ -32,24 +31,40 @@ class TokenStream{
 
 function scan(str){
     var stream = [];
+    var mode = new Mode();
 
-    while(str.length > 0)
-        stream.push(getOneToken());
+    while(str.length > 0){
+        var result = getOneToken();
+
+        if(!result){
+            return new Error(`Unexpected token \'${str}\'`);
+        }
+
+        stream.push(result);
+    }
 
     return stream;
 
     function getOneToken(){
-        for(var i=0;i<tokenList.length;i++){
-            var item = tokenList[i];
+        for(var i=0;i<mode.getMatchList().length;i++){
+            var item = mode.getMatchList()[i];
             var result = str.match(item.MATCH);
 
-            if(result){
-                str = str.substr(result[0].length);
-                return new item(result[0]);
-            }
+            if(!result)
+                continue;
 
+            mode.switch(result[0]);
+
+            str = str.substr(result[0].length);
+            return new item(result[0]);
         }
     }
+
 }
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
+}
+
 
 module.exports = TokenStream;

@@ -1,11 +1,11 @@
 const Token = require('./token');
 
-class Num extends Token{
+class Html extends Token{
     constructor(value){
         super(value);
     }
 }
 
-Num.MATCH = /^[0-9]+/;
+Html.MATCH = /^[^(`|{{|}})]+/;
 
-module.exports = Num;
+module.exports = Html;

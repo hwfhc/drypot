@@ -1,14 +1,14 @@
-class Token{
+const Token = require('./token');
+
+class Sep extends Token{
     constructor(value){
-        this.value = value;
+        super(value);
     }
 
     match(tokenStream){
         var tok = tokenStream.peek();
-        if(!tok)
-            return new Error(`no tok rest`);
 
-        if(isSameToken(this,tok)){
+        if(isValueEqual(this,tok) && isInheritedSep(tok)){
             tokenStream.next();
             return tok;
         }else{
@@ -23,17 +23,22 @@ class Token{
         }
 
     }
+}
 
-    eval(){
-        return this.value;
+function isValueEqual(tok1,tok2){
+    return tok1.value === tok2.value;
+}
+
+function isInheritedSep(tok){
+    var tem = tok.__proto__;
+
+    while(tem){
+        if(tem.__proto__ === Sep.prototype)
+            return true;
+        tem = tem.__proto__
     }
+
+    return false;
 }
 
-function isSameToken(tok1,tok2){
-    if(tok1.__proto__ === tok2.__proto__)
-        return true;
-    else
-        return false;
-}
-
-module.exports = Token;
+module.exports = Sep;

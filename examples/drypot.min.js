@@ -60,61 +60,214 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 8);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
 /***/ (function(module, exports) {
 
-module.exports = {
-    set,
-    get,
-    getChild,
-    setItem,
-    getItem,
+class Token{
+    constructor(value){
+        this.value = value;
+    }
 
-    getItemChild
-};
+    match(tokenStream){
+        var tok = tokenStream.peek();
+        if(!tok)
+            return new Error(`no tok rest`);
 
-const scope = {
-    bool: false,//here is a bug, the result of {{bool}} is 'false',a string.
-    tem: [],
-    item: {}
+        if(isSameToken(this,tok)){
+            tokenStream.next();
+            return tok;
+        }else{
+            var errMessage = tok.value;
+
+            if(tokenStream.peek(2))
+                errMessage += tokenStream.peek(2).value;
+            if(tokenStream.peek(3))
+                errMessage += tokenStream.peek(3).value;
+
+            return new Error(`not match in ${errMessage}`);
+        }
+
+    }
+
+    eval(){
+        return this.value;
+    }
 }
 
-function set(ident = undefined,value){
-    scope[ident] = value;
+function isSameToken(tok1,tok2){
+    if(tok1.__proto__ === tok2.__proto__)
+        return true;
+    else
+        return false;
 }
 
-function get(ident){
-    return scope[ident];
-}
-
-function getItem(ident){
-    return scope.item;
-}
-
-function getChild(ident,child){
-    return scope[ident][child];
-}
-
-function getItemChild(child){
-    return scope.item[child];
-}
-
-function setItem(){
-    scope.item = scope['tem'].splice(0,1)[0];
-}
+module.exports = Token;
 
 
 /***/ }),
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
+const Sep = __webpack_require__(2);
+
+class Punc extends Sep{
+    constructor(value){
+        super(value);
+    }
+}
+
+Punc.MATCH = /^(\(|\)|,|\.)/;
+
+module.exports = Punc;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Token = __webpack_require__(0);
+
+class Sep extends Token{
+    constructor(value){
+        super(value);
+    }
+
+    match(tokenStream){
+        var tok = tokenStream.peek();
+
+        if(isValueEqual(this,tok) && isInheritedSep(tok)){
+            tokenStream.next();
+            return tok;
+        }else{
+            var errMessage = tok.value;
+
+            if(tokenStream.peek(2))
+                errMessage += tokenStream.peek(2).value;
+            if(tokenStream.peek(3))
+                errMessage += tokenStream.peek(3).value;
+
+            return new Error(`not match in ${errMessage}`);
+        }
+
+    }
+}
+
+function isValueEqual(tok1,tok2){
+    return tok1.value === tok2.value;
+}
+
+function isInheritedSep(tok){
+    var tem = tok.__proto__;
+
+    while(tem){
+        if(tem.__proto__ === Sep.prototype)
+            return true;
+        tem = tem.__proto__
+    }
+
+    return false;
+}
+
+module.exports = Sep;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const call = __webpack_require__(9);
+const scope = __webpack_require__(10);
+
+module.exports = {
+    call,scope
+};
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Token = __webpack_require__(0);
+const ENV = __webpack_require__(3);
+
+class Ident extends Token{
+    constructor(value){
+        super(value);
+    }
+
+    eval(){
+        return ENV.scope.get(this.value);
+    }
+}
+
+Ident.MATCH = /^[a-zA-Z_]+/;
+
+module.exports = Ident;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Token = __webpack_require__(0);
+
+class Num extends Token{
+    constructor(value){
+        super(value);
+    }
+}
+
+Num.MATCH = /^[0-9]+/;
+
+module.exports = Num;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Punc = __webpack_require__(1);
+
+class Quo extends Punc{
+    constructor(){
+        super('`');
+    }
+}
+
+Quo.MATCH = /^(`)/;
+
+module.exports = Quo;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Token = __webpack_require__(0);
+
+class Html extends Token{
+    constructor(value){
+        super(value);
+    }
+}
+
+Html.MATCH = /^[^(`|{{|}})]+/;
+
+module.exports = Html;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
 (function (){
-    const compiler = __webpack_require__(2);
-    const scope = __webpack_require__(0);
+    const ENV  = __webpack_require__(3);
+    const scope  = ENV.scope;
+    const compiler = __webpack_require__(11);
 
     const dp_component = document.getElementsByClassName('dp-component');
     const dp_dynamic = document.getElementsByClassName('dp-dynamic');
@@ -145,7 +298,7 @@ function setItem(){
 
             if(data){
                 new Promise((resolve,reject) => {
-                    compiler(data,result => {
+                    compiler(data,(err,result) => {
                         scope.set(name,JSON.parse(result));
                         resolve(result);
                     })
@@ -157,7 +310,7 @@ function setItem(){
                     })
                 );
             }else{
-                compiler(html,result => {
+                compiler(html,(err,result) => {
                     removeTag(node);
                     node.innerHTML = result;
                 });
@@ -179,7 +332,7 @@ function setItem(){
             i--;
 
             new Promise((resolve,reject) => {
-                compiler(data,result => {
+                compiler(data,(err,result) => {
                     scope.set('tem',JSON.parse(result));
                     removeTag(node);
 
@@ -192,8 +345,7 @@ function setItem(){
 
                 for(let j=0;j<length;j++){
                     scope.setItem();
-
-                    compiler(html,result => {
+                    compiler(html,(err,result) => {
                         let child = node.cloneNode(true);
                         child.innerHTML = result;
 
@@ -211,7 +363,7 @@ function setItem(){
             let node = elements[i];
             let bool = node.getAttribute('dp-var');
 
-            compiler(bool,result => {
+            compiler(bool,(err,result) => {
                 if(result === 'false')
                     node.parentNode.removeChild(node);
             });
@@ -238,546 +390,628 @@ function setItem(){
 
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const interpreter = __webpack_require__(3);
-
-module.exports = function(text,callback){
-    interpreter(text,callback);
-};
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = interpretDynamicHtml;
-
-const parser = __webpack_require__(4);
-const call = __webpack_require__(7);
-const scope = __webpack_require__(0);
-
-
-function interpretDynamicHtml(code,callback){
-    var input = parser(code);
-
-    var html = '';
-    var arr = input.html;
-    var promiseArr = [];
-
-    var kw = 'item';
-
-    for(let i=0;i<arr.length;i++){
-        var promise = new Promise(function(resolve, reject) {
-            interpret(arr[i],function(result){
-                arr[i] = result;
-                resolve();
-            });
-        });
-        promiseArr.push(promise);
-    }
-
-    Promise.all(promiseArr).then(function(){
-        for(var i=0;i<arr.length;i++){
-            html += arr[i];
-        }
-
-        callback(html);
-    });
-
-
-    function interpret(input,callback){
-        if(input.value === 'item' && input.type === 'var')
-        {
-            callback(scope.getItem());
-            return;
-        }
-        if(is_text(input)) callback(input.value);
-        if(is_num(input)) callback(interpret_num(input));
-        if(is_call(input)) interpret_call(input,callback);
-        if(is_var(input)) callback(interpret_var(input));
-        if(is_dot(input)) callback(interpret_dot(input));
-        if(is_str(input)) interpret_str(input,callback);
-    }
-
-    function interpret_call(input,callback){
-        var arg = [];
-        var promiseArr = [];
-
-        for(let i=0;i<input.arguments.length;i++){
-            arg[i] = input.arguments[i];
-            var promise = new Promise(function(resolve, reject) {
-                interpret(arg[i],function(result){ arg[i] = result; resolve();
-                });
-            });
-            promiseArr.push(promise);
-        }
-
-        Promise.all(promiseArr).then(function(){
-            call(input.func,arg,callback);
-        });
-    }
-    function interpret_str(input,callback){
-        if(!input.parts) callback(input.value);
-
-        var text = '';
-        var arr = input.parts;
-        var promiseArr = [];
-
-        for(let i=0;i<arr.length;i++){
-            var promise = new Promise(function(resolve, reject) {
-                interpret(arr[i],function(result){
-                    arr[i] = result;
-                    resolve();
-                });
-            });
-            promiseArr.push(promise);
-        }
-
-        Promise.all(promiseArr).then(function(){
-            for(var i=0;i<arr.length;i++){
-                text += arr[i];
-            }
-            callback(text);
-        });
-    }
-    function interpret_var(input){
-        return scope.get(input.value);
-    }
-    function interpret_dot(input){
-        if(input.value === 'item') return scope.getItemChild(input.arrow.value);
-        return scope.getChild(input.value,input.arrow.value);
-    }
-    function interpret_num(input){
-        return input.value;
-    }
-
-    function is_text(input){
-        return input.type === 'text';
-    }
-    function is_num(input){
-        return input.type === 'num';
-    }
-    function is_call(input){
-        return input.type === 'call';
-    }
-    function is_var(input){
-        return input.type === 'var'&&
-            input.value != 'item';
-    }
-    function is_dot(input){
-        return input.type === 'dot';
-    }
-    function is_str(input){
-        return input.type === 'str';
-    }
-
-}
-
-
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = parseDynamicHtml;
-
-
-const lexer = __webpack_require__(5);
-
-function parseDynamicHtml(code){
-    var input = lexer(code);
-
-    var html = [];
-    while (!input.eof()){
-        var result = parse_html();
-        if(result) html.push(result);
-    }
-    return { type: "html", html: html };
-
-    function parse_html(){
-        var tok = input.peek();
-
-        if(is_text(tok)) return parse_text();
-        if(is_code(tok)) return parse_code();
-        if(is_code_end(tok)) return null;
-        return input.next();
-    }
-
-    function is_text(tok){
-        if(tok.type === 'text') return true;
-        return false;
-    }
-    function is_code(tok){
-        if(tok.type === 'code' && tok.value === '{{'){
-            input.next();
-            return true;
-        }
-        return false;
-    }
-    function is_code_end(tok){
-        if(tok.type === 'code' && tok.value === '}}'){
-            input.next();
-            return true;
-        }
-        return false;
-    }
-
-    function parse_text(){
-        return input.next();
-    }
-    function parse_code(){
-        var tok = input.next();
-
-        if(is_call(tok)) return parse_call(tok);
-        if(is_str(tok)) return parse_str(tok);
-        if(is_punc('.')) return parse_dot(tok);
-        if(is_ident(tok)) return parse_ident(tok);
-        //if(is_bin_exp(tok)) return parse_str();
-        //if(is_end(tok)) return parse_str();
-        if(is_num(tok)) return parse_num(tok);
-    }
-
-    function parse_call(tok){
-        return { type : 'call', func : tok.value, arguments : get_arguments()}
-    }
-    function parse_str(tok){
-        var parts = [];
-        parts.push(tok);
-
-        while (!input.eof()){
-            if(is_str(input.peek())){
-                parts.push(input.next());
-                continue;
-            }
-            if(is_var_in_str(input.peek())){
-                input.next();
-                parts.push(parse_code());
-                skip_punc('}');
-                continue;
-            }
-            break;
-        }
-        return { type: "str", parts: parts };
-
-        function is_var_in_str(tok){
-            return tok.value === '${' && tok.type == "punc";
-        }
-    }
-    function parse_dot(tok){
-        input.next();
-        return {
-            type: 'dot',
-            value: tok.value,
-            arrow: parse_code()
-        };
-    }
-    function parse_ident(tok){
-        return tok;
-    }
-    function parse_num(tok){
-        return tok;
-    }
-
-    function is_str(tok){
-        if(tok.type === 'str') return true;
-        return false;
-    }
-    function is_call(tok){
-        if(is_punc('(')) return true;
-        return false;
-    }
-    function is_ident(tok){
-        if(tok.type === 'var') return true;
-        return false;
-    }
-    function is_num(tok){
-        if(tok.type === 'num') return true;
-        return false;
-    }
-
-    function is_punc(ch) {
-        var tok = input.peek();
-        return tok && tok.type == "punc" && (!ch || tok.value == ch) && tok;
-    }
-    function get_arguments(){
-        var arg = [], first = true;
-        skip_punc('(');
-        while (!input.eof()) {
-            if (is_punc(')')) break;
-            if (first) {first = false;}else {skip_punc(',');}
-            if (is_punc(')')) break;
-            arg.push(parse_code());
-        }
-        skip_punc(')');
-        return arg;
-    }
-    function skip_punc(ch) {
-        if (is_punc(ch)) input.next();
-        else input.croak("Expecting punctuation: \"" + ch + "\"");
-    }
-
-
-}
-
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = tokenStream;
-
-const inputStream = __webpack_require__(6);
-
-function tokenStream(code) {
-    var input = inputStream(code);
-    var current = null;
-    //var keywords = " if then else lambda λ true false ";
-    var read_next = read_next_out_code;
-
-    return {next,peek,eof,croak : input.croak};
-
-    function read_next_out_code(){
-        if (input.eof()) return null;
-        var ch = input.peek();
-
-        if (is_code_start(ch)){
-            read_next = read_next_in_code;
-            return { type: "code", value: "{{" };
-        }
-        return read_text();
-    }
-    function read_text(){
-        var str = read_while( (ch) => {return ch != '{';} );
-
-        return { type: "text", value: str };
-    }
-    function read_next_in_code(){
-        read_while(is_whitespace);
-        if (input.eof()) return null;
-        var ch = input.peek();
-
-        if (is_code_end(ch)){
-            read_next = read_next_out_code;
-            return { type: "code", value: "}}" };
-        }
-        //if (is_op(ch)) return read_op();
-        if (is_str_start(ch)) return read_string();
-        if (is_var_in_str(ch)) return read_var_in_str();
-        if (is_punc(ch)) return {
-            type  : "punc",
-            value : input.next()
-        }
-        if (is_op(ch)) return {
-            type  : "op",
-            value : input.next()
-        }
-        if (is_num(ch)) return read_num();
-        if (is_ident(ch)) return read_ident();
-        input.croak("Can't handle character: " + ch);
-    }
-
-    function read_while(predicate) {
-        var str = "";
-        while (!input.eof() && predicate(input.peek()))
-            str += input.next();
-        return str;
-    }
-
-    function read_string(){
-        var str = "";
-
-        if(input.peek() === '`') input.next();
-
-        while (!input.eof()){
-            if(is_str_end(input.peek())){
-                input.next();
-                return { type: "str", value: str };
-            }
-
-            if(is_var_in_str(input.peek())) return { type: "str", value: str };
-
-            str += input.next();
-        }
-
-        function is_str_end(ch){
-            return "`".indexOf(ch) >= 0; }
-    }
-    function read_var_in_str(){
-        input.next();input.next();
-        return { type: "punc", value: '${' };
-    }
-    function read_num(){
-        var num = parseInt(read_while(is_num));
-        return { type: "num", value: num };
-    }
-    function read_ident() {
-        var ident = read_while(is_ident);
-        return { type  : "var", value : ident };
-    }
-
-    function is_whitespace(ch){
-        return " \t\n".indexOf(ch) >= 0;
-    }
-    function is_code_start(ch){
-        if(ch === '{' && input.peek(2) === '{'){
-            input.next();input.next();
-            return true;
-        }
-        return false;
-    }
-    function is_code_end(ch){
-        if(ch === '}' && input.peek(2) === '}'){
-            input.next();
-            input.next();
-            return true;
-        }
-        return false;
-    }
-    function is_str_start(ch){
-        if( ch === '`' || input.before() === '}') return true;
-    }
-    function is_var_in_str(ch){
-        return ch === '$';
-    }
-    function is_punc(ch){
-        return ",;(){}.".indexOf(ch) >= 0;
-    }
-    function is_op(ch){
-        return "+-*/=".indexOf(ch) >= 0;
-    }
-    function is_num(ch){
-        return /[0-9]/i.test(ch);
-    }
-    function is_ident(ch){
-        return /[a-zλ_]/i.test(ch);
-    }
-
-    function peek(){
-        return current || (current = read_next());
-    }
-    function next(){
-        var tok = current;
-        current = null;
-        return tok || read_next();
-    }
-    function eof(){
-        return peek() == null;
-    }
-}
-
-
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-module.exports = inputStream;
-
-function inputStream(input) {
-    var pos = 0, line = 1, col = 0;
-
-    return {next,peek,before,eof,croak};
-
-    /**
-     * Get next char in input stream and remove it from stream.
-     *
-     * @return {char}
-     * @public
-     */
-
-    function next() {
-        var ch = input.charAt(pos);pos++;
-        if (ch == "\n") line++, col = 0; else col++;
-        return ch;
-    }
-
-    /**
-     * Get char with offset num without removing.
-     * eg: n = 1 will get next char.
-     *
-     * @param {number} num
-     * @return {char}
-     * @public
-     */
-
-    function peek(num = 1) {
-        var offset = num - 1;
-        return input.charAt(pos + offset);
-    }
-
-    /**
-     * Get the char before the char of next().
-     *
-     * @return {char}
-     * @public
-     */
-
-    function before() {
-        return input.charAt(pos - 1);
-    }
-
-    /**
-     * If there is no char in input stream.
-     *
-     * @public
-     * @return {boolean}
-     */
-
-    function eof() {
-        return peek() == "";
-    }
-
-    /**
-     * Throw a error.
-     *
-     * @param {string} msg
-     * @public
-     */
-
-    function croak(msg) {
-        throw new Error(msg + " (" + line + ":" + col + ")");
-    }
-
-}
-
-
-
-/***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports) {
 
 module.exports = call;
 
-const funcPool = {};
-funcPool.getPathname = function(number,callback){
-    callback(window.location.pathname.split('/')[number]);
+function call(func,arg,callback){
+    return func.call(this,arg);
 }
-funcPool.ajax = function (url,callback){
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function()
-    {
-        if (xmlhttp.readyState==4 && xmlhttp.status==200)
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports) {
+
+module.exports = {
+    set,
+    get,
+    getChild,
+    setItem,
+    getItem,
+    getTem,
+
+    getItemChild
+};
+
+const scope = {
+    bool: '123',
+    tem: [],
+    item: {},
+    ajax: async function (url){
+        return await sendReq(url);
+    },
+    getPathname: function(number,callback){
+        callback(window.location.pathname.split('/')[number]);
+    }
+}
+
+function set(ident = undefined,value){
+    scope[ident] = value;
+}
+
+function get(ident){
+    return scope[ident];
+}
+
+
+function getTem(){
+    return scope.tem;
+}
+
+function getItem(ident){
+    return scope.item;
+}
+
+function getChild(ident,child){
+    return scope[ident][child];
+}
+
+function getItemChild(child){
+    return scope.item[child];
+}
+
+function setItem(){
+    scope.item = scope['tem'].splice(0,1)[0];
+}
+
+function sendReq(url){
+    return new Promise((resolve,reject) => {
+
+        var xmlhttp = new XMLHttpRequest();
+
+        xmlhttp.onreadystatechange = function()
         {
-            callback(xmlhttp.responseText);
+            if (xmlhttp.readyState==4 && xmlhttp.status==200)
+            {
+                resolve(xmlhttp.responseText);
+            }
+        }
+
+        xmlhttp.open("GET",url,true);
+        xmlhttp.send();
+    });
+}
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const ENV = __webpack_require__(3);
+
+const rule = __webpack_require__(12);
+const tokenStream = __webpack_require__(17);
+
+const Ident = __webpack_require__(4);
+const Punc = __webpack_require__(1);
+const Num = __webpack_require__(5);
+const Sep = __webpack_require__(2);
+const Html = __webpack_require__(7);
+
+var ident = new Ident();
+var num = new Num();
+var html = new Html();
+
+var dot = rule('dot').ast(ident).repeat([sep('.'),ident]).setEval(
+    function (){
+        if(this.getNumberOfChild() === 1)
+            return this.getChild(0).eval();
+        else
+            return  ENV.scope.getChild(
+                this.getChild(0).value,
+                this.getChild(1).value);
+    }
+);
+
+var str = rule('str').sep('`').ast(html).sep('`').setEval(
+    function(){
+        return this.getFirstChild().eval();
+    }
+);
+var arg = rule('arg').or([str,dot,num]).setEval(
+    function (){
+        return this.getFirstChild().eval();
+    }
+);
+
+var call = rule('call').ast(ident).sep('(').ast(arg).repeat([sep(','),arg]).sep(')').setEval(
+    function (){
+        var func = this.getFirstChild().eval();
+        var args = [];
+
+        for(var i=1;i<this.getNumberOfChild();i++){
+            var item = this.getChild(i).eval();
+            args.push(this.getChild(i).eval());
+        }
+
+        return ENV.call(func,args);
+    }
+);
+
+// stmt : (html) '{{' call '}}' (html)
+var stmt = rule('stmt').maybe([html]).sep('{{').or([call,dot]).sep('}}').maybe([html]).setEval(
+    async function (){
+        var str = '';
+
+        for(var i=0;i<this.getChildren().length;i++){
+            str += await this.getChildren()[i].eval();
+        }
+
+        return str;
+    }
+);
+
+
+function sep(value){
+    return new Sep(value);
+}
+
+module.exports = async function (code,callback){
+    var ts = new tokenStream(code);
+
+    if(isError(ts)){
+        callback(ts);
+        return;
+    }
+
+    var ast =  stmt.match(ts);
+
+    if(isError(ast)){
+        callback(ast);
+        return;
+    }
+
+    callback(null,await ast.eval());
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
+}
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Ident = __webpack_require__(4);
+const Punc = __webpack_require__(1);
+const Num = __webpack_require__(5);
+const Quo = __webpack_require__(6);
+const Sep = __webpack_require__(2);
+
+const AST = __webpack_require__(13);
+const Repeat = __webpack_require__(14);
+const Maybe = __webpack_require__(15);
+const Or = __webpack_require__(16);
+
+
+class Rule{
+    constructor(tag){
+        this.tag = tag;
+        this.eval;
+
+        this.list = [];
+    }
+
+    ast(item){
+        this.list.push(item);
+
+        return this;
+    }
+
+    sep(str){
+        this.list.push(new Sep(str));
+
+        return this;
+    }
+
+    or(arg){
+        this.list.push(new Or(arg));
+
+        return this;
+    }
+
+    repeat(arg){
+        this.list.push(new Repeat(arg));
+
+        return this;
+    }
+
+    maybe(arg){
+        this.list.push(new Maybe(arg));
+
+        return this;
+    }
+
+    setEval(evaluate){
+        this.eval = evaluate;
+
+        return this;
+    }
+
+    match(tokenStream){
+        var list = this.list;
+        var ast = new AST(this.tag,this.eval);
+
+        for(var i=0;i<list.length;i++){
+            var item = list[i];
+
+            var result = item.match(tokenStream);
+
+            if(isAstOfRepeat(result))
+                result.forEach(item => addChildWithoutSep(ast,item));
+            else if(!isError(result))
+                addChildWithoutSep(ast,result);
+            else
+                return result;
+        }
+
+
+        return ast;
+    }
+
+}
+
+function addChildWithoutSep(ast,item){
+    if(!isSep(item))
+        ast.addChild(item);
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
+}
+
+function isSep(tok){
+    var tem = tok.__proto__;
+
+    while(tem){
+        if(tem.__proto__ === Sep.prototype)
+            return true;
+        tem = tem.__proto__
+    }
+
+    return false;
+}
+
+function isAstOfRepeat(obj){
+    return obj.__proto__ === Array.prototype;
+}
+
+module.exports = function(arg){
+    return new Rule(arg);
+}
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports) {
+
+class AST{
+    constructor(type,evaluate){
+        this.type = type;
+        this.eval = evaluate;
+
+        this.children = [];
+    }
+
+    addChild(child){
+        this.children.push(child);
+    }
+
+    getChild(index){
+        return this.children[index];
+    }
+
+    getChildren(){
+        return this.children
+    }
+
+    getFirstChild(){
+        return this.children[0];
+    }
+
+    getNumberOfChild(){
+        return this.children.length;
+    }
+}
+
+module.exports = AST;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports) {
+
+class Repeat{
+    /*
+     * repeat 0 time or more time
+     *
+     */
+    constructor(list){
+        this.list = list;
+    }
+
+    match(tokenStream){
+        var astArr = [];
+
+        while(1){
+            var result = matchOnce(this.list,tokenStream);
+
+            if(result)
+                insertAtLastOfArr(astArr,result);
+            else
+                break;
+        }
+
+        return astArr;
+    }
+}
+
+function matchOnce(list,tokenStream){
+    var rollbackPoint = tokenStream.createRollbackPoint();
+    var arrOfResult = [];
+
+    for(var i=0;i<list.length;i++){
+        var result =  list[i].match(tokenStream);
+
+        if(isError(result)){
+            tokenStream.rollback(rollbackPoint);
+            return false;
+        }else{
+            arrOfResult.push(result);
         }
     }
 
-    xmlhttp.open("GET",url,true);
-    xmlhttp.send();
+    return arrOfResult;
 }
 
 
-function call(func,arg,callback){
-    arg.push(callback);
-    funcPool[func].apply(window,arg);
+function insertAtLastOfArr(main,arr){
+    for(var i=0;i<arr.length;i++)
+        main.push(arr[i]);
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
+}
+
+module.exports = Repeat;
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports) {
+
+class Maybe{
+    constructor(list){
+        this.list = list;
+    }
+
+    match(tokenStream){
+        var astArr = [];
+
+        var result = matchOnce(this.list,tokenStream);
+
+        if(result)
+            insertAtLastOfArr(astArr,result);
+
+        return astArr;
+    }
+}
+
+function matchOnce(list,tokenStream){
+    var rollbackPoint = tokenStream.createRollbackPoint();
+    var arrOfResult = [];
+
+    for(var i=0;i<list.length;i++){
+        var result =  list[i].match(tokenStream);
+
+        if(isError(result)){
+            tokenStream.rollback(rollbackPoint);
+            return false;
+        }else{
+            arrOfResult.push(result);
+        }
+    }
+
+    return arrOfResult;
 }
 
 
+function insertAtLastOfArr(main,arr){
+    for(var i=0;i<arr.length;i++)
+        main.push(arr[i]);
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
+}
+
+module.exports = Maybe;
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports) {
+
+class Or{
+    constructor(branch){
+        /*
+         * the first branch has the biggest priority
+         */
+        this.branch = branch;
+    }
+
+    match(tokenStream){
+        var ast = new Error('not match in ',this);
+
+        this.branch.forEach(item => {
+            var rollbackPoint = tokenStream.createRollbackPoint();
+            var result =  item.match(tokenStream);
+
+            if(isError(result))
+                tokenStream.rollback(rollbackPoint);
+            else
+                ast = result;
+        });
+
+        return ast;
+    }
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
+}
+
+module.exports = Or;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Mode = __webpack_require__(18);
+
+class TokenStream{
+    constructor(code){
+        this.index = -1;
+        this.stream = scan(code);
+
+        if(isError(this.stream))
+            return this.stream;
+    }
+
+    next(){
+        this.index++;
+        return this.stream[this.index];
+    }
+
+    peek(i=1){
+      return this.stream[this.index+i];
+    }
+
+    createRollbackPoint(){
+        return {
+            index: this.index
+        }
+    }
+
+    rollback(point){
+        this.index = point.index;
+    }
+}
+
+function scan(str){
+    var stream = [];
+    var mode = new Mode();
+
+    while(str.length > 0){
+        var result = getOneToken();
+
+        if(!result){
+            return new Error(`Unexpected token \'${str}\'`);
+        }
+
+        stream.push(result);
+    }
+
+    return stream;
+
+    function getOneToken(){
+        for(var i=0;i<mode.getMode().length;i++){
+            var item = mode.getMode()[i];
+            var result = str.match(item.MATCH);
+
+            if(!result)
+                continue;
+
+            mode.switch(result[0]);
+
+            str = str.substr(result[0].length);
+            return new item(result[0]);
+        }
+    }
+
+}
+
+function isError(obj){
+    return obj.__proto__ === Error.prototype;
+}
+
+
+module.exports = TokenStream;
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Token = __webpack_require__(0);
+
+const Num = __webpack_require__(5);
+const Ident = __webpack_require__(4);
+const Punc = __webpack_require__(1);
+const Html = __webpack_require__(7);
+const Quo = __webpack_require__(6);
+const Code = __webpack_require__(19);
+
+const outCode = [Html,Code];
+const inStr = [Html,Quo];
+const outStr = [Num,Ident,Quo,Punc,Code];
+
+
+class Mode{
+    constructor(){
+        this.list = outCode;
+    }
+
+    getMode(){
+        return this.list;
+    }
+
+    switch(char){
+        if(char === '{{')
+            this.list = outStr;
+
+
+        if(char === '}}')
+            this.list = outCode;
+
+        if(char === '`'){
+            if(this.list === inStr)
+                this.list = outStr;
+            else
+                this.list = inStr;
+        }
+    }
+}
+
+
+function isStrStart(char){
+    var a = (char === '`');
+    return a ;
+}
+
+module.exports = Mode;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Sep = __webpack_require__(2);
+
+class Code extends Sep{
+    constructor(value){
+        super(value);
+    }
+}
+
+Code.MATCH = /^({{|}})/;
+
+module.exports = Code;
 
 
 /***/ })

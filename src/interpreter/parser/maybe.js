@@ -1,6 +1,6 @@
-class Repeat{
+class Maybe{
     /*
-     * repeat 0 time or more time
+     * match one time
      *
      */
     constructor(list){
@@ -10,14 +10,10 @@ class Repeat{
     match(tokenStream){
         var astArr = [];
 
-        while(1){
-            var result = matchOnce(this.list,tokenStream);
+        var result = matchOnce(this.list,tokenStream);
 
-            if(result)
-                insertAtLastOfArr(astArr,result);
-            else
-                break;
-        }
+        if(result)
+            insertAtLastOfArr(astArr,result);
 
         return astArr;
     }
@@ -33,8 +29,9 @@ function matchOnce(list,tokenStream){
         if(isError(result)){
             tokenStream.rollback(rollbackPoint);
             return false;
-        }else
+        }else{
             arrOfResult.push(result);
+        }
     }
 
     return arrOfResult;
@@ -50,4 +47,4 @@ function isError(obj){
     return obj.__proto__ === Error.prototype;
 }
 
-module.exports = Repeat;
+module.exports = Maybe;

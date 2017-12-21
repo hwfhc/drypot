@@ -1,6 +1,7 @@
 (function (){
-    const compiler = require('./compiler');
-    const scope = require('./compiler/lib/scope');
+    const ENV  = require('./interpreter/env');
+    const scope  = ENV.scope;
+    const compiler = require('./interpreter/spec');
 
     const dp_component = document.getElementsByClassName('dp-component');
     const dp_dynamic = document.getElementsByClassName('dp-dynamic');
@@ -31,7 +32,7 @@
 
             if(data){
                 new Promise((resolve,reject) => {
-                    compiler(data,result => {
+                    compiler(data,(err,result) => {
                         scope.set(name,JSON.parse(result));
                         resolve(result);
                     })
@@ -43,7 +44,7 @@
                     })
                 );
             }else{
-                compiler(html,result => {
+                compiler(html,(err,result) => {
                     removeTag(node);
                     node.innerHTML = result;
                 });
@@ -65,7 +66,7 @@
             i--;
 
             new Promise((resolve,reject) => {
-                compiler(data,result => {
+                compiler(data,(err,result) => {
                     scope.set('tem',JSON.parse(result));
                     removeTag(node);
 
@@ -78,8 +79,7 @@
 
                 for(let j=0;j<length;j++){
                     scope.setItem();
-
-                    compiler(html,result => {
+                    compiler(html,(err,result) => {
                         let child = node.cloneNode(true);
                         child.innerHTML = result;
 
@@ -97,7 +97,7 @@
             let node = elements[i];
             let bool = node.getAttribute('dp-var');
 
-            compiler(bool,result => {
+            compiler(bool,(err,result) => {
                 if(result === 'false')
                     node.parentNode.removeChild(node);
             });
