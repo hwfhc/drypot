@@ -1,4 +1,8 @@
 class Maybe{
+    /*
+     * match one time
+     *
+     */
     constructor(list){
         this.list = list;
     }

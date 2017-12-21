@@ -17,7 +17,7 @@ class Mode{
         this.list = outCode;
     }
 
-    getMode(){
+    getMatchList(){
         return this.list;
     }
 

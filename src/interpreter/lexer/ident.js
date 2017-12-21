@@ -7,7 +7,7 @@ class Ident extends Token{
     }
 
     eval(){
-        return ENV.scope.get(this.value);
+        return ENV.getScope().get(this.value);
     }
 }
 

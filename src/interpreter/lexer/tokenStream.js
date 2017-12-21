@@ -46,8 +46,8 @@ function scan(str){
     return stream;
 
     function getOneToken(){
-        for(var i=0;i<mode.getMode().length;i++){
-            var item = mode.getMode()[i];
+        for(var i=0;i<mode.getMatchList().length;i++){
+            var item = mode.getMatchList()[i];
             var result = str.match(item.MATCH);
 
             if(!result)

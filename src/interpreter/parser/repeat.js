@@ -33,9 +33,8 @@ function matchOnce(list,tokenStream){
         if(isError(result)){
             tokenStream.rollback(rollbackPoint);
             return false;
-        }else{
+        }else
             arrOfResult.push(result);
-        }
     }
 
     return arrOfResult;

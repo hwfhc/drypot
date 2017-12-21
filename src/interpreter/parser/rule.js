@@ -65,9 +65,11 @@ class Rule{
 
             if(isAstOfRepeat(result))
                 result.forEach(item => addChildWithoutSep(ast,item));
-            else if(!isError(result))
+
+            if(!isAstOfRepeat(result) && !isError(result))
                 addChildWithoutSep(ast,result);
-            else
+
+            if(!isAstOfRepeat(result) && isError(result))
                 return result;
         }
 

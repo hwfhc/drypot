@@ -13,49 +13,65 @@ var ident = new Ident();
 var num = new Num();
 var html = new Html();
 
-var dot = rule('dot').ast(ident).repeat([sep('.'),ident]).setEval(
-    function (){
-        if(this.getNumberOfChild() === 1)
-            return this.getChild(0).eval();
-        else
-            return  ENV.scope.getChild(
-                this.getChild(0).value,
-                this.getChild(1).value);
+// dot : ident {'.' ident} 
+var dot = rule('dot').ast(ident).repeat([sep('.'), ident]).setEval(
+    function () {
+        var arr = [];
+
+        for (var i = 0; i < this.getNumberOfChild(); i++)
+            arr.push(this.getChild(i).value);
+
+        return ENV.getScope().get(arr);
     }
 );
 
+// str : '`' html '`' 
 var str = rule('str').sep('`').ast(html).sep('`').setEval(
-    function(){
-        return this.getFirstChild().eval();
-    }
-);
-var arg = rule('arg').or([str,dot,num]).setEval(
-    function (){
+    function () {
         return this.getFirstChild().eval();
     }
 );
 
+// arg : str | dot | num 
+var arg = rule('arg').or([str, dot, num]).setEval(
+    function () {
+        return this.getFirstChild().eval();
+    }
+);
+
+// call : ident '(' arg {',' arg} ')'
 var call = rule('call').ast(ident).sep('(').ast(arg).repeat([sep(','),arg]).sep(')').setEval(
     function (){
         var func = this.getFirstChild().eval();
         var args = [];
 
-        for(var i=1;i<this.getNumberOfChild();i++){
+        for (var i = 1; i < this.getNumberOfChild(); i++) {
             var item = this.getChild(i).eval();
             args.push(this.getChild(i).eval());
+
+            if (isError(item))
+                return item;
         }
 
-        return ENV.call(func,args);
+        if (isError(func))
+            return func;
+
+        return ENV.call(func, args);
     }
 );
 
-// stmt : (html) '{{' call '}}' (html)
-var stmt = rule('stmt').maybe([html]).sep('{{').or([call,dot]).sep('}}').maybe([html]).setEval(
-    async function (){
+// stmt : [html] '{{' call '}}' [html]
+var stmt = rule('stmt').maybe([html]).sep('{{').or([call, dot]).sep('}}').maybe([html]).setEval(
+    async function () {
         var str = '';
 
-        for(var i=0;i<this.getChildren().length;i++){
-            str += await this.getChildren()[i].eval();
+        for (var i = 0; i < this.getChildren().length; i++) {
+            var result = await this.getChildren()[i].eval();
+
+            if (isError(result))
+                return result;
+
+            str += result;
         }
 
         return str;
@@ -76,7 +92,7 @@ module.exports = async function (code,callback){
     }
 
     var ast =  stmt.match(ts);
-
+    
     if(isError(ast)){
         callback(ast);
         return;

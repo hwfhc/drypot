@@ -1,7 +1,7 @@
+"use strict";
 module.exports = {
     set,
     get,
-    getChild,
     setItem,
     getItem,
     getTem,
@@ -10,7 +10,9 @@ module.exports = {
 };
 
 const scope = {
-    bool: '123',
+    bool: {
+        a : 1
+    },
     tem: [],
     item: {},
     ajax: async function (url){
@@ -25,21 +27,48 @@ function set(ident = undefined,value){
     scope[ident] = value;
 }
 
-function get(ident){
-    return scope[ident];
+function get(ident) {
+    if (isArray(ident)) {
+        var tem = scope[ident[0]];
+
+        if (!tem) return formErr();
+
+        for (var i = 1; i < ident.length; i++) {
+            var tem = tem[ident[i]];
+
+            if (!tem) return formErr();
+        }
+
+    }
+    else {
+        var tem = scope[ident];
+
+        if (!tem) return formErr();
+    }
+
+    return tem;
+
+    function formErr() {
+        if (isArray(ident)) {
+            var str = ident[0];
+
+            for (var j = i; j < i; j++)
+                str += `.${ident[j]}`;
+
+            return new Error(`variable is undefiend : ${str}`);
+        }
+        else
+            return new Error(`variable is undefiend : ${ident}`);
+    }
 }
 
 
-function getTem(){
+function getTem() {
     return scope.tem;
 }
 
 function getItem(ident){
     return scope.item;
-}
-
-function getChild(ident,child){
-    return scope[ident][child];
 }
 
 function getItemChild(child){
@@ -66,4 +95,8 @@ function sendReq(url){
         xmlhttp.open("GET",url,true);
         xmlhttp.send();
     });
+}
+
+function isArray(obj){
+    return obj.__proto__ === Array.prototype;
 }
